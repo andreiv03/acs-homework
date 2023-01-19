@@ -8,7 +8,6 @@
 #define false 0
 
 int analyse_traffic(char *data);
-char *extract_network(char *ip);
 
 void solve_task_two(FILE *input_file, FILE *output_file)
 {
@@ -45,78 +44,65 @@ void solve_task_two(FILE *input_file, FILE *output_file)
 
 int analyse_traffic(char *traffic)
 {
-	char *origin_ip = NULL;
-	char *response_ip = NULL;
-	char *flow_duration = NULL;
-	char *flow_packets_payload = NULL;
+	size_t list_length = 0;
+	char **list = split(traffic, ",", &list_length);
 
-	int counter = 0;
-	char *field = strtok(traffic, ",");
+	const size_t ORIGIN_IP = 0;
+	const size_t ORIGIN_PORT = 1;
+	const size_t RESPONSE_IP = 2;
+	const size_t RESPONSE_PORT = 3;
+	const size_t FLOW_DURATION = 4;
+	const size_t FWD_PKTS_TOT = 5;
+	const size_t BWD_PKTS_TOT = 6;
+	const size_t FWD_HEADER_SIZE_TOT = 7;
+	const size_t BWD_HEADER_SIZE_TOT = 8;
+	const size_t FLOW_FIN_FLAG_COUNT = 9;
+	const size_t FLOW_SYN_FLAG_COUNT = 10;
+	const size_t FLOW_ACK_FLAG_COUNT = 11;
+	const size_t FWD_PKTS_PAYLOAD_AVG = 12;
+	const size_t BWD_PKTS_PAYLOAD_AVG = 13;
+	const size_t FWD_IAT_AVG = 14;
+	const size_t BWD_IAT_AVG = 15;
+	const size_t FLOW_PKTS_PAYLOAD_AVG = 16;
 
-	while (field) {
-		if (counter == 0) {
-			origin_ip = calloc(strlen(field) + 1, sizeof(char));
-			strcpy(origin_ip, field);
-		}
+	size_t oip_net_length = 0;
+	char **origin_ip_network = split(list[ORIGIN_IP], ".", &oip_net_length);
 
-		if (counter == 2) {
-			response_ip = calloc(strlen(field) + 1, sizeof(char));
-			strcpy(response_ip, field);
-		}
+	size_t rip_net_length = 0;
+	char **response_ip_network = split(list[RESPONSE_IP], ".", &rip_net_length);
 
-		if (counter == 4) {
-			flow_duration = calloc(strlen(field) + 1, sizeof(char));
-			strcpy(flow_duration, field);
-		}
+	int is_same_network = 0;
+	if (strcmp(origin_ip_network[0], response_ip_network[0]) == 0)
+		if (strcmp(origin_ip_network[1], response_ip_network[1]) == 0)
+			is_same_network = 1;
 
-		if (counter == 16) {
-			flow_packets_payload = calloc(strlen(field) + 1, sizeof(char));
-			strcpy(flow_packets_payload, field);
-		}
+	free_allocated_memory_array(origin_ip_network, oip_net_length);
+	free_allocated_memory_array(response_ip_network, rip_net_length);
 
-		counter = counter + 1;
-		field = strtok(NULL, ",");
-	}
+	float flow_average_payload = atof(list[FLOW_PKTS_PAYLOAD_AVG]);
+	float fwd_iat = atof(list[FWD_IAT_AVG]);
 
-	float seconds = atof(strrchr(flow_duration, ':') + 1);
-	float payload = atof(flow_packets_payload);
-	free_allocated_memory(2, flow_duration, flow_packets_payload);
+	float flow_seconds = atof(strrchr(list[FLOW_DURATION], ':') + 1);
+	int is_flow_duration_low = (flow_seconds < 0.1) ? 1 : 0;
 
-	char *origin_ip_network = extract_network(origin_ip);
-	char *response_ip_network = extract_network(response_ip);
-	free_allocated_memory(2, origin_ip, response_ip);
+	float headers_total_size = atof(list[FWD_HEADER_SIZE_TOT]);
+	int abnormal_headers_size = (headers_total_size > 1000) ? 1 : 0;
 
-	if (seconds > 1) {
-		if (payload == 0) {
-			free_allocated_memory(2, origin_ip_network, response_ip_network);
-			return false;
-		}
-
-		free_allocated_memory(2, origin_ip_network, response_ip_network);
+	if (is_same_network && is_flow_duration_low && flow_average_payload) {
+		free_allocated_memory_array(list, list_length);
 		return true;
 	}
 
-	// if (strcmp(origin_ip_network, response_ip_network) == 0) {
-	//   free_allocated_memory(2, origin_ip_network, response_ip_network);
-	//   return true;
-	// }
-
-	free_allocated_memory(2, origin_ip_network, response_ip_network);
-
-	return false;
-}
-
-char *extract_network(char *ip)
-{
-	size_t length = 0;
-
-	if (strlen(ip) <= 15) {
-		length = strcspn(ip, ".") + 1;
-		if (strchr(ip, '.'))
-			length = length + strcspn(strchr(ip, '.') + 1, ".");
+	if (is_same_network && flow_seconds && flow_average_payload && fwd_iat) {
+		free_allocated_memory_array(list, list_length);
+		return true;
 	}
 
-	char *network = calloc(length + 1, sizeof(char));
-	strncpy(network, ip, length);
-	return network;
+	if (flow_seconds > 1 && flow_average_payload && abnormal_headers_size) {
+		free_allocated_memory_array(list, list_length);
+		return true;
+	}
+
+	free_allocated_memory_array(list, list_length);
+	return false;
 }

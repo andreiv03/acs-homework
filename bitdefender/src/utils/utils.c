@@ -34,6 +34,23 @@ int ends_with(const char *string, const char *search)
 	return true;
 }
 
+char **split(char *string, char *separators, size_t *length)
+{
+	char **list = calloc(*length, sizeof(char *));
+	char *item = strtok(string, separators);
+
+	while (item) {
+		list = realloc(list, (*length + 1) * sizeof(char *));
+		list[*length] = calloc(strlen(item) + 1, sizeof(char));
+		strcpy(list[*length], item);
+		*length = *length + 1;
+
+		item = strtok(NULL, separators);
+	}
+
+	return list;
+}
+
 void free_allocated_memory(size_t number, ...)
 {
 	va_list list;
@@ -43,4 +60,11 @@ void free_allocated_memory(size_t number, ...)
 		free(va_arg(list, char *));
 
 	va_end(list);
+}
+
+void free_allocated_memory_array(char **array, size_t length)
+{
+	for (size_t index = 0; index < length; ++index)
+		free(array[index]);
+	free(array);
 }

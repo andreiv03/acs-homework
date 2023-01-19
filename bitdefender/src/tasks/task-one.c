@@ -15,9 +15,9 @@ typedef struct {
 
 void read_domains(file_data *domains);
 void read_extensions(file_data *extensions);
+
 int check_url(char *url, file_data domains, file_data extensions);
 int search_for_suspicious_extensions(char *url, file_data extensions);
-int check_queries(char *url);
 
 void solve_task_one(FILE *input_file, FILE *output_file)
 {
@@ -180,26 +180,4 @@ int search_for_suspicious_extensions(char *url, file_data extensions)
 			return true;
 
 	return false;
-}
-
-int check_queries(char *url)
-{
-	char *queries = calloc(strlen(url), sizeof(char));
-	strcpy(queries, url + 1);
-
-	char *query = strtok(queries, "&;");
-	while (query) {
-		char *pair = calloc(strlen(query) + 1, sizeof(char));
-		strcpy(pair, query);
-
-		char *key = calloc(strcspn(pair, "="), sizeof(char));
-		strncpy(key, pair, strcspn(pair, "="));
-
-		query = strtok(NULL, "&;");
-		free(pair);
-		free(key);
-	}
-
-	free(queries);
-	return 0;
 }
