@@ -12,7 +12,7 @@ run:
 	./my_av
 
 pack:
-	zip -9 -FSr my_av.zip my_av.c ./src/tasks/task-one.c ./src/tasks/task-one.h ./src/tasks/task-two.c ./src/tasks/task-two.h ./src/utils/utils.c ./src/utils/utils.h ./src/utils/extensions.txt my_av.py Makefile README
+	zip -9 -FSr my_av.zip my_av.c ./src/tasks/task-one.c ./src/tasks/task-one.h ./src/tasks/task-two.c ./src/tasks/task-two.h ./src/utils/utils.c ./src/utils/utils.h ./src/utils/extensions.txt ./src/utils/tlds.txt ./src/utils/websites.txt my_av.py Makefile README
 
 clean:
 	rm -f my_av
