@@ -1,56 +1,95 @@
-#include "../include/list.h"
-
 #include <stdio.h>
 #include <stdlib.h>
 
-struct SinglyNode* createSinglyNode() {
-	struct SinglyNode* node;
-	node = calloc(1, sizeof(struct SinglyNode));
-	return node;
+#include "../include/list.h"
+
+struct SinglyNode *createSinglyNode() {
+  struct SinglyNode *node = calloc(1, sizeof(struct SinglyNode));
+  return node;
 }
 
-struct DoublyNode* createDoublyNode() {
-	struct DoublyNode* node;
-	node = calloc(1, sizeof(struct DoublyNode));
-	return node;
+struct DoublyNode *createDoublyNode() {
+  struct DoublyNode *node = calloc(1, sizeof(struct DoublyNode));
+  return node;
 }
 
-void freeSinglyNode(struct SinglyNode* node) {
-	free(node->data);
-	free(node);
+void freeSinglyNode(struct SinglyNode *node) {
+  free(node->data);
+  free(node);
 }
 
-void freeDoublyNode(struct DoublyNode* node) {
-	free(node->data);
-	free(node);
+void freeDoublyNode(struct DoublyNode *node) {
+  free(node->data);
+  free(node);
 }
 
-void showDoublyList(FILE* file, struct DoublyNode* head, int pointer) {
-	int index = 0;
+void pushSinglyNodeAtEnd(struct SinglyNode **head, void *data, size_t dataSize) {
+  struct SinglyNode *node = createSinglyNode();
+  node->data = malloc(dataSize);
 
-	while (head) {
-		if (index == pointer)
-			fprintf(file, "|%c|", *(char*)head->data);
-		else
-			fprintf(file, "%c", *(char*)head->data);
+  for (size_t index = 0; index < dataSize; ++index)
+    *(char *)(node->data + index) = *(char *)(data + index);
 
-		index = index + 1;
-		head = head->next;
-	}
+  if (*head == NULL) {
+    *head = node;
+    return;
+  }
 
-	fprintf(file, "\n");
+  struct SinglyNode *temp = *head;
+  while (temp->next != NULL)
+    temp = temp->next;
+  temp->next = node;
 }
 
-void showDoublyListPointer(FILE* file, struct DoublyNode* head, int pointer) {
-	int index = 0;
+void pushDoublyNodeAtEnd(struct DoublyNode **head, void *data, size_t dataSize) {
+  struct DoublyNode *node = createDoublyNode();
+  node->data = malloc(dataSize);
 
-	while (head) {
-		if (index == pointer) {
-			fprintf(file, "%c\n", *(char*)head->data);
-			return;
-		}
+  for (size_t index = 0; index < dataSize; ++index)
+    *(char *)(node->data + index) = *(char *)(data + index);
 
-		index = index + 1;
-		head = head->next;
-	}
+  if (*head == NULL) {
+    *head = node;
+    return;
+  }
+
+  struct DoublyNode *temp = *head;
+  while (temp->next != NULL)
+    temp = temp->next;
+  temp->next = node;
+  node->prev = temp;
+}
+
+void printSinglyList(FILE *stream, struct SinglyNode *head,
+                     struct SinglyNode *node,
+                     void (*printFunction)(FILE *, void *, int)) {
+  head = head->next;
+
+  while (head != NULL) {
+    if (head == node)
+      (*printFunction)(stream, head->data, 1);
+    else
+      (*printFunction)(stream, head->data, 0);
+
+    head = head->next;
+  }
+
+  fprintf(stream, "\n");
+}
+
+void printDoublyList(FILE *stream, struct DoublyNode *head,
+                     struct DoublyNode *node,
+                     void (*printFunction)(FILE *, void *, int)) {
+  head = head->next;
+
+  while (head != NULL) {
+    if (head == node)
+      (*printFunction)(stream, head->data, 1);
+    else
+      (*printFunction)(stream, head->data, 0);
+
+    head = head->next;
+  }
+
+  fprintf(stream, "\n");
 }

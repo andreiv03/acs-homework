@@ -1,12 +1,15 @@
 #ifndef UTILS
 #define UTILS
 
-#include <stdio.h>
+struct Band {
+  struct DoublyNode *finger;
+  struct DoublyNode *list;
+};
 
-#include "./list.h"
+void printChar(FILE *stream, void *data, int isHighlighted);
 
-void getOperation(char* string, char* operation, char* value);
-int getOperationType(char* operation);
-void applyUpdateOperation(FILE* file, struct DoublyNode** head, int* pointer, char* operation, char* value);
+int getOperationType(char *operation);
+void applyUpdateOperation(FILE *stream, struct Band **band, char *operation,
+                          char *value);
 
 #endif

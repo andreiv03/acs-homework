@@ -1,153 +1,118 @@
-#include "../include/utils.h"
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "../include/list.h"
+#include "../include/utils.h"
 
-void getOperation(char* string, char* operation, char* value) {
-	char* space = strchr(string, ' ');
-
-	if (space == NULL) {
-		strcpy(operation, string);
-		strcpy(value, "");
-		return;
-	}
-
-	strncpy(operation, string, space - string);
-	operation[space - string] = '\0';
-
-	*value = space[1];
+void printChar(FILE *stream, void *data, int isHighlighted) {
+  if (isHighlighted)
+    fprintf(stream, "|%c|", *(char *)data);
+  else
+    fprintf(stream, "%c", *(char *)data);
 }
 
-int getOperationType(char* operation) {
-	if (strcmp(operation, "MOVE_LEFT") == 0 ||
-			strcmp(operation, "MOVE_RIGHT") == 0 ||
-			strcmp(operation, "MOVE_LEFT_CHAR") == 0 ||
-			strcmp(operation, "MOVE_RIGHT_CHAR") == 0 ||
-			strcmp(operation, "WRITE") == 0 ||
-			strcmp(operation, "INSERT_LEFT") == 0 ||
-			strcmp(operation, "INSERT_RIGHT") == 0)
-		return 1;
+int getOperationType(char *operation) {
+  if (strcmp(operation, "MOVE_LEFT") == 0 ||
+      strcmp(operation, "MOVE_RIGHT") == 0 ||
+      strcmp(operation, "MOVE_LEFT_CHAR") == 0 ||
+      strcmp(operation, "MOVE_RIGHT_CHAR") == 0 ||
+      strcmp(operation, "WRITE") == 0 ||
+      strcmp(operation, "INSERT_LEFT") == 0 ||
+      strcmp(operation, "INSERT_RIGHT") == 0)
+    return 1;
 
-	if (strcmp(operation, "SHOW") == 0 ||
-			strcmp(operation, "SHOW_CURRENT") == 0)
-		return 2;
+  if (strcmp(operation, "SHOW") == 0 || strcmp(operation, "SHOW_CURRENT") == 0)
+    return 2;
 
-	if (strcmp(operation, "UNDO") == 0 ||
-			strcmp(operation, "REDO") == 0)
-		return 3;
+  if (strcmp(operation, "UNDO") == 0 || strcmp(operation, "REDO") == 0)
+    return 3;
 
-	if (strcmp(operation, "EXECUTE") == 0)
-		return 4;
+  if (strcmp(operation, "EXECUTE") == 0)
+    return 4;
 
-	return 0;
+  return 0;
 }
 
-void applyUpdateOperation(FILE* file, struct DoublyNode** head, int* pointer, char* operation, char* value) {
-	struct DoublyNode* initial = *head;
-	int index = 0;
+void applyUpdateOperation(FILE *stream, struct Band **band, char *operation,
+                          char *value) {
+  if (strcmp(operation, "MOVE_LEFT") == 0) {
+    if ((*band)->finger != (*band)->list->next)
+      (*band)->finger = (*band)->finger->prev;
+  }
 
-	while (index != *pointer) {
-		index = index + 1;
-		*head = (*head)->next;
-	}
+  if (strcmp(operation, "MOVE_RIGHT") == 0) {
+    if ((*band)->finger->next == NULL) {
+      void *data = malloc(sizeof(char));
+      *(char *)data = '#';
+      pushDoublyNodeAtEnd(&(*band)->list, data, sizeof(char));
+      free(data);
+    }
 
-	if (strcmp(operation, "MOVE_LEFT") == 0) {
-		if (*pointer > 0)
-			*pointer = *pointer - 1;
-	}
+    (*band)->finger = (*band)->finger->next;
+  }
 
-	if (strcmp(operation, "MOVE_RIGHT") == 0) {
-		if ((*head)->next == NULL) {
-			struct DoublyNode* node = createDoublyNode();
-			node->data = calloc(1, sizeof(char));
-			*(char*)node->data = '#';
-			node->prev = *head;
-			(*head)->next = node;
-			*head = node;
-		}
+  if (strcmp(operation, "MOVE_LEFT_CHAR") == 0) {
+    struct DoublyNode *temp = (*band)->finger;
 
-		*pointer = *pointer + 1;
-	}
+    while ((*band)->finger->data) {
+      (*band)->finger = (*band)->finger->prev;
+      if ((*band)->finger->data && *(char *)(*band)->finger->data == *value)
+        break;
+    }
 
-	if (strcmp(operation, "MOVE_LEFT_CHAR") == 0) {
-		int found = 0;
-		int initialPointer = *pointer;
+    if ((*band)->finger->data == NULL) {
+      (*band)->finger = temp;
+      fprintf(stream, "%s\n", "ERROR");
+    }
+  }
 
-		while (*head) {
-			if (*(char*)(*head)->data == *value) {
-				found = 1;
-				break;
-			}
+  if (strcmp(operation, "MOVE_RIGHT_CHAR") == 0) {
+    while ((*band)->finger->next) {
+      (*band)->finger = (*band)->finger->next;
+      if (*(char *)(*band)->finger->data == *value)
+        break;
+    }
 
-			*pointer = *pointer - 1;
-			*head = (*head)->prev;
-		}
+    if (*(char *)(*band)->finger->data != *value) {
+      void *data = malloc(sizeof(char));
+      *(char *)data = '#';
+      pushDoublyNodeAtEnd(&(*band)->list, data, sizeof(char));
+      free(data);
+      (*band)->finger = (*band)->finger->next;
+    }
+  }
 
-		if (!found) {
-			*pointer = initialPointer;
-			fprintf(file, "%s\n", "ERROR");
-		}
-	}
+  if (strcmp(operation, "WRITE") == 0)
+    *(char *)(*band)->finger->data = *value;
 
-	if (strcmp(operation, "MOVE_RIGHT_CHAR") == 0) {
-		int found = 0;
+  if (strcmp(operation, "INSERT_LEFT") == 0) {
+    if ((*band)->finger->prev->data == NULL)
+      fprintf(stream, "%s\n", "ERROR");
+    else {
+      struct DoublyNode *node = createDoublyNode();
+      node->data = calloc(1, sizeof(char));
+      *(char *)node->data = *value;
+      node->next = (*band)->finger;
+      node->prev = (*band)->finger->prev;
+      (*band)->finger->prev->next = node;
+      (*band)->finger->prev = node;
+      (*band)->finger = (*band)->finger->prev;
+    }
+  }
 
-		while ((*head)->next) {
-			if (*(char*)(*head)->data == *value) {
-				found = 1;
-				break;
-			}
+  if (strcmp(operation, "INSERT_RIGHT") == 0) {
+    struct DoublyNode *node = createDoublyNode();
+    node->data = calloc(1, sizeof(char));
+    *(char *)node->data = *value;
+    node->prev = (*band)->finger;
 
-			*pointer = *pointer + 1;
-			*head = (*head)->next;
-		}
+    if ((*band)->finger->next) {
+      node->next = (*band)->finger->next;
+      (*band)->finger->next->prev = node;
+    }
 
-		if (!found) {
-			struct DoublyNode* node = createDoublyNode();
-			node->data = calloc(1, sizeof(char));
-			*(char*)node->data = '#';
-			node->prev = *head;
-			(*head)->next = node;
-			*head = node;
-			*pointer = *pointer + 1;
-		}
-	}
-
-	if (strcmp(operation, "WRITE") == 0)
-		*(char*)(*head)->data = *value;
-
-	if (strcmp(operation, "INSERT_LEFT") == 0) {
-		if (*pointer == 0)
-			fprintf(file, "%s\n", "ERROR");
-		else {
-			struct DoublyNode* node = createDoublyNode();
-			node->data = calloc(1, sizeof(char));
-			*(char*)node->data = *value;
-			node->next = *head;
-			node->prev = (*head)->prev;
-			(*head)->prev->next = node;
-			(*head)->prev = node;
-			*pointer = *pointer - 1;
-		}
-	}
-
-	if (strcmp(operation, "INSERT_RIGHT") == 0) {
-		struct DoublyNode* node = createDoublyNode();
-		node->data = calloc(1, sizeof(char));
-		*(char*)node->data = *value;
-		node->prev = *head;
-
-		if ((*head)->next) {
-			node->next = (*head)->next;
-			(*head)->next->prev = node;
-		}
-
-		(*head)->next = node;
-		*pointer = *pointer + 1;
-	}
-
-	*head = initial;
+    (*band)->finger->next = node;
+    (*band)->finger = (*band)->finger->next;
+  }
 }

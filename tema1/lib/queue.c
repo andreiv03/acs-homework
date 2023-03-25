@@ -1,26 +1,30 @@
+#include <stdlib.h>
 #include <string.h>
 
 #include "../include/list.h"
+#include "../include/queue.h"
 
-void pushToQueue(struct SinglyNode** head, struct SinglyNode** tail, char* data) {
-	struct SinglyNode* node = createSinglyNode();
-	node->data = calloc(strlen(data) + 1, sizeof(char));
-	strcpy(node->data, data);
-
-	if (*head == NULL && *tail == NULL)
-		*head = *tail = node;
-	else
-		(*tail)->next = node, *tail = node;
+void pushToQueue(struct Queue **queue, void *data, size_t dataSize) {
+  if ((*queue)->head == NULL) {
+    pushSinglyNodeAtEnd(&(*queue)->head, data, dataSize);
+    (*queue)->tail = (*queue)->head;
+  } else {
+    pushSinglyNodeAtEnd(&(*queue)->tail, data, dataSize);
+    (*queue)->tail = (*queue)->tail->next;
+  }
 }
 
-struct SinglyNode* popFromQueue(struct SinglyNode** head) {
-	if (*head == NULL)
-		return NULL;
+void *popFromQueue(struct Queue **queue) {
+  if ((*queue)->head == NULL)
+    return NULL;
 
-	struct SinglyNode* node = createSinglyNode();
-	node->data = calloc(strlen((*head)->data) + 1, sizeof(char));
-	strcpy(node->data, (*head)->data);
+  struct SinglyNode *node = (*queue)->head;
+  void *data = node->data;
 
-	*head = (*head)->next;
-	return node;
+  (*queue)->head = (*queue)->head->next;
+  if ((*queue)->head == NULL)
+    (*queue)->tail = NULL;
+
+  free(node);
+  return data;
 }

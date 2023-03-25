@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "include/list.h"
@@ -7,98 +8,100 @@
 #include "include/utils.h"
 
 int main() {
-	const char* inputFileName = "tema1.in";
-	FILE* inputFile = fopen(inputFileName, "r");
-	if (inputFile == NULL)
-		return 1;
+  const char *inputFileName = "tema1.in";
+  FILE *inputFileStream = fopen(inputFileName, "r");
+  if (inputFileStream == NULL)
+    return 1;
 
-	const char* outputFileName = "tema1.out";
-	FILE* outputFile = fopen(outputFileName, "w");
-	if (outputFile == NULL)
-		return 1;
+  const char *outputFileName = "tema1.out";
+  FILE *outputFileStream = fopen(outputFileName, "w");
+  if (outputFileStream == NULL)
+    return 1;
 
-	struct DoublyNode* listHead = createDoublyNode();
-	listHead->data = calloc(1, sizeof(char));
-	*(char*)listHead->data = '#';
+  struct Band *band = calloc(1, sizeof(struct Band));
+  band->list = createDoublyNode();
 
-	struct SinglyNode* queueHead = NULL;
-	struct SinglyNode* queueTail = NULL;
+  void *data = malloc(sizeof(char));
+  *(char *)data = '#';
+  pushDoublyNodeAtEnd(&band->list, data, sizeof(char));
+  free(data);
 
-	struct DoublyNode* undoStackTail = NULL;
-	struct DoublyNode* redoStackTail = NULL;
+  band->finger = band->list->next;
 
-	int pointer = 0;
-	size_t length = 0;
-	fscanf(inputFile, "%ld", &length);
-	getc(inputFile);
+  struct Queue *operationsQueue = calloc(1, sizeof(struct Queue));
+  struct Queue *valuesQueue = calloc(1, sizeof(struct Queue));
 
-	for (size_t index = 0; index < length; ++index) {
-		char* buffer = NULL;
-		size_t bufferSize = 0;
-		if (getline(&buffer, &bufferSize, inputFile) == -1)
-			return 1;
+  struct Stack *undoStack = calloc(1, sizeof(struct Stack));
+  struct Stack *redoStack = calloc(1, sizeof(struct Stack));
 
-		buffer[strcspn(buffer, "\n")] = '\0';
+  char line[100];
+  fgets(line, sizeof(line), inputFileStream);
+  size_t length = atoi(line);
 
-		char operation[32], value;
-		getOperation(buffer, operation, &value);
+  for (size_t index = 0; index < length; ++index) {
+    char operation[20], value;
+    fgets(line, sizeof(line), inputFileStream);
+    sscanf(line, "%s %c", operation, &value);
 
-		switch (getOperationType(operation)) {
-			case 1:
-				pushToQueue(&queueHead, &queueTail, buffer);
-				break;
+    switch (getOperationType(operation)) {
+    case 1:
+      pushToQueue(&operationsQueue, operation,
+                  (strlen(operation) + 1) * sizeof(char));
 
-			case 2:
-				if (strcmp(operation, "SHOW") == 0)
-					showDoublyList(outputFile, listHead, pointer);
+      if (value) {
+        pushToQueue(&valuesQueue, &value, sizeof(char));
+        value = 0;
+      }
 
-				if (strcmp(operation, "SHOW_CURRENT") == 0)
-					showDoublyListPointer(outputFile, listHead, pointer);
+      break;
 
-				break;
+    case 2:
+      if (strcmp(operation, "SHOW") == 0)
+        printDoublyList(outputFileStream, band->list, band->finger, printChar);
 
-			case 3:
-				if (strcmp(operation, "UNDO") == 0) {
-					struct DoublyNode* node = popFromStack(&undoStackTail);
-					pushToStack(&redoStackTail, &pointer);
-					pointer = *(int*)node->data;
-					freeDoublyNode(node);
-				}
+      if (strcmp(operation, "SHOW_CURRENT") == 0)
+        fprintf(outputFileStream, "%c\n", *(char *)band->finger->data);
 
-				if (strcmp(operation, "REDO") == 0) {
-					struct DoublyNode* node = popFromStack(&redoStackTail);
-					pushToStack(&undoStackTail, &pointer);
-					pointer = *(int*)node->data;
-					freeDoublyNode(node);
-				}
+      break;
 
-				break;
+    case 3:
+      if (strcmp(operation, "UNDO") == 0) {
+        struct DoublyNode **node = popFromStack(&undoStack);
+        pushToStack(&redoStack, &band->finger, sizeof(struct DoublyNode));
+        (*band).finger = *node;
+      }
 
-			case 4:
-				struct SinglyNode* node = popFromQueue(&queueHead);
-				char operation[32], value;
-				getOperation((char*)node->data, operation, &value);
-				freeSinglyNode(node);
+      if (strcmp(operation, "REDO") == 0) {
+        struct DoublyNode **node = popFromStack(&redoStack);
+        pushToStack(&undoStack, &band->finger, sizeof(struct DoublyNode));
+        (*band).finger = *node;
+      }
 
-				if (strcmp(operation, "MOVE_LEFT") == 0 ||
-						strcmp(operation, "MOVE_RIGHT") == 0 ||
-						strcmp(operation, "MOVE_LEFT_CHAR") == 0 ||
-						strcmp(operation, "MOVE_RIGHT_CHAR") == 0)
-					pushToStack(&undoStackTail, &pointer);
+      break;
 
-				else
-					clearStack(&undoStackTail), clearStack(&redoStackTail);
+    case 4:
+      void *data = popFromQueue(&operationsQueue);
+      void *value = NULL;
+      if (strcmp((char *)data, "MOVE_LEFT") != 0 &&
+          strcmp((char *)data, "MOVE_RIGHT") != 0)
+        value = popFromQueue(&valuesQueue);
 
-				applyUpdateOperation(outputFile, &listHead, &pointer, operation, &value);
-				break;
+      if (strcmp((char *)data, "MOVE_LEFT") == 0 ||
+          strcmp((char *)data, "MOVE_RIGHT") == 0)
+        pushToStack(&undoStack, &band->finger, sizeof(struct DoublyNode));
+      else
+        clearStack(&undoStack), clearStack(&redoStack);
 
-			default:
-				break;
-		}
-	}
+      applyUpdateOperation(outputFileStream, &band, data, value);
+      break;
 
-	fclose(inputFile);
-	fclose(outputFile);
+    default:
+      break;
+    }
+  }
 
-	return 0;
+  fclose(inputFileStream);
+  fclose(outputFileStream);
+
+  return 0;
 }
