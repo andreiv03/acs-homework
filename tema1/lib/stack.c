@@ -22,10 +22,13 @@ void *popFromStack(struct Stack **stack) {
 }
 
 void clearStack(struct Stack **stack) {
+  if ((*stack)->tail == NULL)
+    return;
+
   struct DoublyNode *node = (*stack)->tail;
 
-  while ((*stack)->tail) {
-    (*stack)->tail = (*stack)->tail->next;
+  while ((*stack)->tail != NULL) {
+    (*stack)->tail = (*stack)->tail->prev;
     freeDoublyNode(node);
     node = (*stack)->tail;
   }

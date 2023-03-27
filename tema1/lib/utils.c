@@ -43,7 +43,7 @@ void applyUpdateOperation(FILE *stream, struct Band **band, char *operation,
 
   if (strcmp(operation, "MOVE_RIGHT") == 0) {
     if ((*band)->finger->next == NULL) {
-      void *data = malloc(sizeof(char));
+      void *data = calloc(1, sizeof(char));
       *(char *)data = '#';
       pushDoublyNodeAtEnd(&(*band)->list, data, sizeof(char));
       free(data);
@@ -75,7 +75,7 @@ void applyUpdateOperation(FILE *stream, struct Band **band, char *operation,
     }
 
     if (*(char *)(*band)->finger->data != *value) {
-      void *data = malloc(sizeof(char));
+      void *data = calloc(1, sizeof(char));
       *(char *)data = '#';
       pushDoublyNodeAtEnd(&(*band)->list, data, sizeof(char));
       free(data);
@@ -115,4 +115,8 @@ void applyUpdateOperation(FILE *stream, struct Band **band, char *operation,
     (*band)->finger->next = node;
     (*band)->finger = (*band)->finger->next;
   }
+
+  free(operation);
+  if (value)
+    free(value);
 }

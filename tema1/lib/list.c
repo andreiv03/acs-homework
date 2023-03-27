@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "../include/list.h"
 
@@ -23,12 +24,26 @@ void freeDoublyNode(struct DoublyNode *node) {
   free(node);
 }
 
+void destroySinglyList(struct SinglyNode **head) {
+  while (*head != NULL) {
+    struct SinglyNode *node = *head;
+    *head = (*head)->next;
+    freeSinglyNode(node);
+  }
+}
+
+void destroyDoublyList(struct DoublyNode **head) {
+  while (*head != NULL) {
+    struct DoublyNode *node = *head;
+    *head = (*head)->next;
+    freeDoublyNode(node);
+  }
+}
+
 void pushSinglyNodeAtEnd(struct SinglyNode **head, void *data, size_t dataSize) {
   struct SinglyNode *node = createSinglyNode();
-  node->data = malloc(dataSize);
-
-  for (size_t index = 0; index < dataSize; ++index)
-    *(char *)(node->data + index) = *(char *)(data + index);
+  node->data = calloc(1, dataSize);
+  memcpy(node->data, data, dataSize);
 
   if (*head == NULL) {
     *head = node;
@@ -43,10 +58,8 @@ void pushSinglyNodeAtEnd(struct SinglyNode **head, void *data, size_t dataSize) 
 
 void pushDoublyNodeAtEnd(struct DoublyNode **head, void *data, size_t dataSize) {
   struct DoublyNode *node = createDoublyNode();
-  node->data = malloc(dataSize);
-
-  for (size_t index = 0; index < dataSize; ++index)
-    *(char *)(node->data + index) = *(char *)(data + index);
+  node->data = calloc(1, dataSize);
+  memcpy(node->data, data, dataSize);
 
   if (*head == NULL) {
     *head = node;
