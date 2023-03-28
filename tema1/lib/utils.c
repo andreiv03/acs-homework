@@ -34,11 +34,13 @@ int getOperationType(char *operation) {
   return 0;
 }
 
-void applyUpdateOperation(FILE *stream, struct Band **band, char *operation,
-                          char *value) {
+int applyUpdateOperation(FILE *stream, struct Band **band, char *operation,
+                         char *value) {
   if (strcmp(operation, "MOVE_LEFT") == 0) {
     if ((*band)->finger != (*band)->list->next)
       (*band)->finger = (*band)->finger->prev;
+    else
+      return 1;
   }
 
   if (strcmp(operation, "MOVE_RIGHT") == 0) {
@@ -55,11 +57,8 @@ void applyUpdateOperation(FILE *stream, struct Band **band, char *operation,
   if (strcmp(operation, "MOVE_LEFT_CHAR") == 0) {
     struct DoublyNode *temp = (*band)->finger;
 
-    while ((*band)->finger->data) {
+    while ((*band)->finger->data && *(char *)(*band)->finger->data != *value)
       (*band)->finger = (*band)->finger->prev;
-      if ((*band)->finger->data && *(char *)(*band)->finger->data == *value)
-        break;
-    }
 
     if ((*band)->finger->data == NULL) {
       (*band)->finger = temp;
@@ -68,11 +67,8 @@ void applyUpdateOperation(FILE *stream, struct Band **band, char *operation,
   }
 
   if (strcmp(operation, "MOVE_RIGHT_CHAR") == 0) {
-    while ((*band)->finger->next) {
+    while ((*band)->finger->next && *(char *)(*band)->finger->data != *value)
       (*band)->finger = (*band)->finger->next;
-      if (*(char *)(*band)->finger->data == *value)
-        break;
-    }
 
     if (*(char *)(*band)->finger->data != *value) {
       void *data = calloc(1, sizeof(char));
@@ -116,7 +112,5 @@ void applyUpdateOperation(FILE *stream, struct Band **band, char *operation,
     (*band)->finger = (*band)->finger->next;
   }
 
-  free(operation);
-  if (value)
-    free(value);
+  return 0;
 }

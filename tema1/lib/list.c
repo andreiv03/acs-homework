@@ -40,6 +40,35 @@ void destroyDoublyList(struct DoublyNode **head) {
   }
 }
 
+void pushSinglyNodeAtBeginning(struct SinglyNode **head, void *data, size_t dataSize) {
+  struct SinglyNode *node = createSinglyNode();
+  node->data = calloc(1, dataSize);
+  memcpy(node->data, data, dataSize);
+
+  if (*head == NULL) {
+    *head = node;
+    return;
+  }
+
+  node->next = *head;
+  *head = node;
+}
+
+void pushDoublyNodeAtBeginning(struct DoublyNode **head, void *data, size_t dataSize) {
+  struct DoublyNode *node = createDoublyNode();
+  node->data = calloc(1, dataSize);
+  memcpy(node->data, data, dataSize);
+
+  if (*head == NULL) {
+    *head = node;
+    return;
+  }
+
+  node->next = *head;
+  (*head)->prev = node;
+  *head = node;
+}
+
 void pushSinglyNodeAtEnd(struct SinglyNode **head, void *data, size_t dataSize) {
   struct SinglyNode *node = createSinglyNode();
   node->data = calloc(1, dataSize);

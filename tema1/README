@@ -1,0 +1,1 @@
+Am grupat operatiile pe tipuri (1 - UPDATE, 2 - QUERY, 3 - UNDO / REDO, 4 - EXECUTE) si le-am executat conform cerintei utilizand un switch.

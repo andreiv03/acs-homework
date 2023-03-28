@@ -1,6 +1,8 @@
 #ifndef QUEUE
 #define QUEUE
 
+#include <stdlib.h>
+
 struct Queue {
   struct SinglyNode *head;
   struct SinglyNode *tail;

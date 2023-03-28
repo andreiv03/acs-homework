@@ -82,19 +82,28 @@ int main() {
         break;
 
       case 4:
-        void *data = popFromQueue(&operationsQueue);
+        void *operation = popFromQueue(&operationsQueue);
         void *value = NULL;
-        if (strcmp((char *)data, "MOVE_LEFT") != 0 &&
-            strcmp((char *)data, "MOVE_RIGHT") != 0)
+        if (strcmp((char *)operation, "MOVE_LEFT") != 0 &&
+            strcmp((char *)operation, "MOVE_RIGHT") != 0)
           value = popFromQueue(&valuesQueue);
 
-        if (strcmp((char *)data, "MOVE_LEFT") == 0 ||
-            strcmp((char *)data, "MOVE_RIGHT") == 0)
+        if (strcmp((char *)operation, "MOVE_LEFT") == 0 ||
+            strcmp((char *)operation, "MOVE_RIGHT") == 0)
           pushToStack(&undoStack, &band->finger, sizeof(struct DoublyNode *));
         else
           clearStack(&undoStack), clearStack(&redoStack);
 
-        applyUpdateOperation(outputFileStream, &band, data, value);
+        int hasFailed = applyUpdateOperation(outputFileStream, &band, operation, value);
+        if (hasFailed) {
+          struct DoublyNode **node = popFromStack(&undoStack);
+          free(node);
+        }
+
+        free(operation);
+        if (value != NULL)
+          free(value), value = NULL;
+
         break;
 
       default:

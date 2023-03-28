@@ -23,6 +23,9 @@ void freeDoublyNode(struct DoublyNode *node);
 void destroySinglyList(struct SinglyNode **head);
 void destroyDoublyList(struct DoublyNode **head);
 
+void pushSinglyNodeAtBeginning(struct SinglyNode **head, void *data, size_t dataSize);
+void pushDoublyNodeAtBeginning(struct DoublyNode **head, void *data, size_t dataSize);
+
 void pushSinglyNodeAtEnd(struct SinglyNode **head, void *data, size_t dataSize);
 void pushDoublyNodeAtEnd(struct DoublyNode **head, void *data, size_t dataSize);
 
