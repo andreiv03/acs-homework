@@ -11,7 +11,7 @@ void checkPriority(sensor **sensors, int sensorsLength);
 
 void printCommand(sensor **sensors, int sensorsLength, int sensorIndex);
 void analyzeCommand(sensor **sensors, int sensorsLength, int sensorIndex);
-void clearCommand(sensor **sensors, int sensorsLength);
+void clearCommand(sensor **sensors, int *sensorsLength);
 void exitCommand(sensor **sensors, int sensorsLength);
 
 int main(int argc, char const *argv[]) {
@@ -43,7 +43,7 @@ int main(int argc, char const *argv[]) {
 			analyzeCommand(sensors, sensorsLength, index);
 
 		if (strcmp(command, "clear") == 0)
-			clearCommand(sensors, sensorsLength);
+			clearCommand(sensors, &sensorsLength);
 
 		if (strcmp(command, "exit") == 0) {
 			exitCommand(sensors, sensorsLength);
@@ -81,8 +81,7 @@ void readSensorsData(FILE *fileStream, sensor **sensors, int sensorsLength) {
 		fread(&sensors[index]->nr_operations, sizeof(int), 1, fileStream);
 		int operationsLength = sensors[index]->nr_operations;
 		sensors[index]->operations_idxs = calloc(operationsLength, sizeof(int));
-		for (int operationIndex = 0; operationIndex < operationsLength; ++operationIndex)
-			fread(&sensors[index]->operations_idxs[operationIndex], sizeof(int), 1, fileStream);
+		fread(sensors[index]->operations_idxs, sizeof(int), operationsLength, fileStream);
 
 		checkPriority(sensors, index);
 	}
@@ -97,14 +96,14 @@ void checkPriority(sensor **sensors, int lastSensorIndex) {
 	if (lastSensorIndex == 0)
 		return;
 
-	int lastPMUIndex = 0;
-	while (sensors[lastPMUIndex]->sensor_type != 1)
-		lastPMUIndex = lastPMUIndex + 1;
+	int firstTireIndex = 0;
+	while (sensors[firstTireIndex] && sensors[firstTireIndex]->sensor_type == 1)
+		firstTireIndex = firstTireIndex + 1;
 
-	if (lastPMUIndex == lastSensorIndex)
-		lastPMUIndex = 0;
+	if (firstTireIndex > lastSensorIndex)
+		return;
 
-	while (lastPMUIndex != lastSensorIndex) {
+	while (firstTireIndex != lastSensorIndex) {
 		void *temp = sensors[lastSensorIndex];
 		sensors[lastSensorIndex] = sensors[lastSensorIndex - 1];
 		sensors[lastSensorIndex - 1] = temp;
@@ -123,7 +122,7 @@ void printCommand(sensor **sensors, int sensorsLength, int sensorIndex) {
 		tire_sensor *data = sensors[sensorIndex]->sensor_data;
 		printf("Pressure: %.2f\n", data->pressure);
 		printf("Temperature: %.2f\n", data->temperature);
-		printf("Wear Level: %d\n", data->wear_level);
+		printf("Wear Level: %d%%\n", data->wear_level);
 		if (data->performace_score == 0)
 			printf("Performance Score: Not Calculated\n");
 		else
@@ -136,8 +135,8 @@ void printCommand(sensor **sensors, int sensorsLength, int sensorIndex) {
 		printf("Voltage: %.2f\n", data->voltage);
 		printf("Current: %.2f\n", data->current);
 		printf("Power Consumption: %.2f\n", data->power_consumption);
-		printf("Energy Regen: %d\n", data->energy_regen);
-		printf("Energy Storage: %d\n", data->energy_storage);
+		printf("Energy Regen: %d%%\n", data->energy_regen);
+		printf("Energy Storage: %d%%\n", data->energy_storage);
 	}
 }
 
@@ -150,15 +149,16 @@ void analyzeCommand(sensor **sensors, int sensorsLength, int sensorIndex) {
 	void (**operations)(void *) = calloc(8, sizeof(void (*)(void *)));
 	get_operations((void **)operations);
 
-	int operationsLength = sensors[sensorIndex]->nr_operations;
-	for (int index = 0; index < operationsLength; ++index)
-		operations[index](sensors[sensorIndex]->sensor_data);
+	for (int index = 0; index < sensors[sensorIndex]->nr_operations; ++index) {
+		int operationIndex = sensors[sensorIndex]->operations_idxs[index];
+		operations[operationIndex](sensors[sensorIndex]->sensor_data);
+	}
 
 	free(operations);
 }
 
-void clearCommand(sensor **sensors, int sensorsLength) {
-	for (int index = 0; index < sensorsLength; ++index) {
+void clearCommand(sensor **sensors, int *sensorsLength) {
+	for (int index = 0; index < *sensorsLength; ++index) {
 		int isErroneous = 0;
 
 		if (sensors[index]->sensor_type == 0) {
@@ -197,10 +197,15 @@ void clearCommand(sensor **sensors, int sensorsLength) {
 			continue;
 
 		void *temp = sensors[index];
-		for (int tempIndex = index; tempIndex < sensorsLength; ++tempIndex)
+		for (int tempIndex = index; tempIndex < *sensorsLength - 1; ++tempIndex)
 			sensors[tempIndex] = sensors[tempIndex + 1];
-		sensorsLength = sensorsLength - 1;
-		free(temp);
+
+		*sensorsLength = *sensorsLength - 1;
+		index = index - 1;
+
+		free(((sensor *)temp)->sensor_data);
+		free(((sensor *)temp)->operations_idxs);
+		free(((sensor *)temp));
 	}
 }
 
