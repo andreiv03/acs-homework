@@ -29,8 +29,8 @@ void freePixelsMatrix(RGB **pixels, int pixelsSize) {
 	free(pixels);
 }
 
-double calculateAverageColor(RGB **pixels, int pixelsSize, int x, int y, char *color) {
-	double averageColor = 0;
+unsigned long long calculateAverageColor(RGB **pixels, int pixelsSize, int x, int y, char *color) {
+	unsigned long long averageColor = 0;
 
 	for (int row = x; row < x + pixelsSize; ++row) {
 		for (int column = y; column < y + pixelsSize; ++column) {
@@ -48,9 +48,9 @@ double calculateAverageColor(RGB **pixels, int pixelsSize, int x, int y, char *c
 }
 
 double calculateSimilarityScore(RGB **pixels, int pixelsSize, int x, int y) {
-	double averageRed = calculateAverageColor(pixels, pixelsSize, x, y, "red");
-	double averageGreen = calculateAverageColor(pixels, pixelsSize, x, y, "green");
-	double averageBlue = calculateAverageColor(pixels, pixelsSize, x, y, "blue");
+	unsigned long long averageRed = calculateAverageColor(pixels, pixelsSize, x, y, "red");
+	unsigned long long averageGreen = calculateAverageColor(pixels, pixelsSize, x, y, "green");
+	unsigned long long averageBlue = calculateAverageColor(pixels, pixelsSize, x, y, "blue");
 	double score = 0;
 
 	for (int row = x; row < x + pixelsSize; ++row) {

@@ -12,7 +12,7 @@ typedef struct RGB {
 RGB **readPixelsMatrix(FILE *inputFileStream, int pixelsSize);
 void freePixelsMatrix(RGB **pixels, int pixelsSize);
 
-double calculateAverageColor(RGB **pixels, int pixelsSize, int x, int y, char *color);
+unsigned long long calculateAverageColor(RGB **pixels, int pixelsSize, int x, int y, char *color);
 double calculateSimilarityScore(RGB **pixels, int pixelsSize, int x, int y);
 
 #endif

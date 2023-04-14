@@ -1,5 +1,6 @@
 #include "../include/quadtree.h"
 
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -11,7 +12,7 @@ QuadTree *buildCompressedQuadTree(RGB **pixels, int pixelsSize, int x, int y, in
 	QuadTree *tree = calloc(1, sizeof(QuadTree));
 	double similarityScore = calculateSimilarityScore(pixels, pixelsSize, x, y);
 
-	if (similarityScore <= factor || pixelsSize == 1) {
+	if (floor(similarityScore) <= factor || pixelsSize == 1) {
 		tree->type = 1;
 		tree->rgb.red = pixels[x][y].red;
 		tree->rgb.green = pixels[x][y].green;
