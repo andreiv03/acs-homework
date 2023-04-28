@@ -1,7 +1,7 @@
 function [Link] = get_link_matrix(Labyrinth)
 	[m, n] = size(Labyrinth);
 
-	Link = zeros(m * n + 2);
+	Link = sparse(m * n + 2, m * n + 2);
 	Link(m * n + 1, m * n + 1) = 1;
 	Link(m * n + 2, m * n + 2) = 1;
 
@@ -19,7 +19,8 @@ function [Link] = get_link_matrix(Labyrinth)
 					in = i + di(d); % neigh i
 					jn = j + dj(d); % neigh j
 
-					if is_inside(in, jn, m, n)
+					% check if neighbor is within bounds
+					if in >= 1 && in <= m && jn >= 1 && jn <= n
 						neigh = (in - 1) * n + jn;
 						Link(node, neigh) = 1 / bits_0;
 					else
@@ -31,14 +32,6 @@ function [Link] = get_link_matrix(Labyrinth)
 					end
 				end
 			end
-		end
-	end
-
-	function result = is_inside(i, j, m, n)
-		if i >= 1 && i <= m && j >= 1 && j <= n
-			result = 1;
-		else
-			result = 0;
 		end
 	end
 end

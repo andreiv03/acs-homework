@@ -3,7 +3,8 @@ function [Labyrinth] = parse_labyrinth(file_path)
 
   m = fscanf(file_stream, "%d", 1);
   n = fscanf(file_stream, "%d", 1);
-  Labyrinth = fscanf(file_stream, "%d", [n, m])';
+  Labyrinth = fscanf(file_stream, "%d", [n, m]);
+  Labyrinth = transpose(Labyrinth);
 
   fclose(file_stream);
 end
