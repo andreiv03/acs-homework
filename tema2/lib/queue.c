@@ -1,11 +1,9 @@
 #include "../include/queue.h"
-
+#include "../include/quadtree.h"
 #include <stdlib.h>
 
-#include "../include/quadtree.h"
-
-void pushToQueue(Queue *queue, QuadTree *tree) {
-	QueueNode *node = calloc(1, sizeof(QueueNode));
+void pushToQueue(Queue* queue, QuadTree* tree) {
+	QueueNode* node = calloc(1, sizeof(QueueNode));
 	node->data = tree;
 
 	if (queue->head == NULL) {
@@ -17,10 +15,12 @@ void pushToQueue(Queue *queue, QuadTree *tree) {
 	}
 }
 
-void popFromQueue(Queue *queue) {
-	QueueNode *node = queue->head;
+void popFromQueue(Queue* queue) {
+	QueueNode* node = queue->head;
 	queue->head = queue->head->next;
+
 	if (queue->head == NULL)
 		queue->tail = NULL;
+
 	free(node);
 }

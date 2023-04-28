@@ -1,29 +1,28 @@
 #ifndef _QUADTREE_H_
 #define _QUADTREE_H_
 
+#include "./utils.h"
 #include <stdio.h>
 
-#include "./utils.h"
-
 typedef struct QuadTree {
-	unsigned char type;
+	uchar type;
 	RGB rgb;
 
-	struct QuadTree *topLeft;
-	struct QuadTree *topRight;
-	struct QuadTree *bottomRight;
-	struct QuadTree *bottomLeft;
+	struct QuadTree* topLeft;
+	struct QuadTree* topRight;
+	struct QuadTree* bottomRight;
+	struct QuadTree* bottomLeft;
 } QuadTree;
 
-QuadTree *buildCompressedQuadTree(RGB **pixels, int pixelsSize, int x, int y, int factor);
-QuadTree *buildDecompressedQuadTree(FILE *inputFileStream);
-void freeQuadTree(QuadTree *tree);
+QuadTree* buildCompressedQuadTree(RGB** pixels, uint pixelsSize, uint x, uint y, int factor);
+QuadTree* buildDecompressedQuadTree(FILE* inputFileStream);
+void freeQuadTree(QuadTree* tree);
 
-int getTreeHeight(QuadTree *tree);
-int getExternalNodesNumber(QuadTree *tree);
-int findLowestExternalNodeLevel(QuadTree *tree, int level);
-void levelOrderTraversal(QuadTree *tree, int level, FILE *outputFileStream);
-int isQuadTreeFull(QuadTree *tree);
-void decompressQuadTree(QuadTree *tree, RGB **pixels, int pixelsSize, int x, int y);
+int getTreeHeight(QuadTree* tree);
+int getExternalNodesNumber(QuadTree* tree);
+int findLowestExternalNodeLevel(QuadTree* tree, int level);
+void levelOrderTraversal(QuadTree* tree, FILE* outputFileStream);
+int isQuadTreeFull(QuadTree* tree);
+void decompressQuadTree(QuadTree* tree, RGB** pixels, uint pixelsSize, uint x, uint y);
 
 #endif

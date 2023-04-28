@@ -1,17 +1,14 @@
-CFLAGS := -Wall -g
+CFLAGS := -Wall -g -std=c99
 FILES := lib/quadtree.c lib/queue.c lib/utils.c
 HEADERS := include/quadtree.h include/queue.h include/utils.h
 
-all: run
+all: build
 
 build: main.c ${FILES} ${HEADERS}
-	gcc ${CFLAGS} -o tema2 main.c ${FILES} ${HEADERS} -lm
-
-run: build
-	./tema2 -c1 0 input.ppm output.dat
+	gcc ${CFLAGS} -o quadtree main.c ${FILES} ${HEADERS} -lm
 
 pack:
 	zip -9 -FSr tema2.zip main.c ${FILES} ${HEADERS} Makefile README
 
 clean:
-	rm -rf tema2 tema2.zip
+	rm -rf quadtree tema2.zip

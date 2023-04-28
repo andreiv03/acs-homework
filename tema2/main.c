@@ -1,13 +1,12 @@
+#include "./include/quadtree.h"
+#include "./include/utils.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "./include/quadtree.h"
-#include "./include/utils.h"
-
-int main(int argc, char const *argv[]) {
-	FILE *inputFileStream;
-	FILE *outputFileStream;
+int main(int argc, char const* argv[]) {
+	FILE* inputFileStream;
+	FILE* outputFileStream;
 
 	inputFileStream = fopen(argv[argc - 2], "rb");
 	if (inputFileStream == NULL)
@@ -18,38 +17,33 @@ int main(int argc, char const *argv[]) {
 		return 1;
 
 	if (strstr(argv[1], "-c")) {
-		char magicIdentifier[3];
-		fscanf(inputFileStream, "%s\n", magicIdentifier);
-
-		int pixelsSize = 0;
+		char garbage[255];
+		uint pixelsSize = 0;
+		fscanf(inputFileStream, "%s\n", garbage);
 		fscanf(inputFileStream, "%d %d\n", &pixelsSize, &pixelsSize);
+		fscanf(inputFileStream, "%s", garbage);
+		fread(garbage, sizeof(char), 1, inputFileStream);
 
-		int colorMaxValue = 0;
-		fscanf(inputFileStream, "%d\n", &colorMaxValue);
-
-		RGB **pixels = readPixelsMatrix(inputFileStream, pixelsSize);
-		QuadTree *tree = buildCompressedQuadTree(pixels, pixelsSize, 0, 0, atoi(argv[2]));
+		RGB** pixels = readPixelsMatrix(inputFileStream, pixelsSize);
+		QuadTree* tree = buildCompressedQuadTree(pixels, pixelsSize, 0, 0, atoi(argv[2]));
 
 		if (strchr(argv[1], '1')) {
 			int treeHeight = getTreeHeight(tree);
-			fwrite(&treeHeight, sizeof(int), 1, outputFileStream);
+			fprintf(outputFileStream, "%d\n", treeHeight);
 
 			int externalNodesNumber = getExternalNodesNumber(tree);
-			fwrite(&externalNodesNumber, sizeof(int), 1, outputFileStream);
+			fprintf(outputFileStream, "%d\n", externalNodesNumber);
 
 			int lowestExternalNodeLevel = findLowestExternalNodeLevel(tree, 0);
 			int biggestBlockSize = pixelsSize;
 			for (int level = 0; level < lowestExternalNodeLevel; ++level)
 				biggestBlockSize = biggestBlockSize / 2;
-			fwrite(&biggestBlockSize, sizeof(int), 1, outputFileStream);
+			fprintf(outputFileStream, "%d\n", biggestBlockSize);
 		}
 
 		if (strchr(argv[1], '2')) {
 			fwrite(&pixelsSize, sizeof(int), 1, outputFileStream);
-
-			int treeHeight = getTreeHeight(tree);
-			for (int level = 0; level < treeHeight; ++level)
-				levelOrderTraversal(tree, level, outputFileStream);
+			levelOrderTraversal(tree, outputFileStream);
 		}
 
 		freePixelsMatrix(pixels, pixelsSize);
@@ -57,22 +51,22 @@ int main(int argc, char const *argv[]) {
 	}
 
 	if (strstr(argv[1], "-d")) {
-		int pixelsSize = 0;
+		uint pixelsSize = 0;
 		fread(&pixelsSize, sizeof(int), 1, inputFileStream);
 
 		fprintf(outputFileStream, "P6\n");
 		fprintf(outputFileStream, "%d %d\n", pixelsSize, pixelsSize);
 		fprintf(outputFileStream, "255\n");
 
-		QuadTree *tree = buildDecompressedQuadTree(inputFileStream);
-		RGB **pixels = calloc(pixelsSize, sizeof(RGB *));
-		for (int row = 0; row < pixelsSize; ++row)
+		QuadTree* tree = buildDecompressedQuadTree(inputFileStream);
+		RGB** pixels = calloc(pixelsSize, sizeof(RGB*));
+		for (uint row = 0; row < pixelsSize; ++row)
 			pixels[row] = calloc(pixelsSize, sizeof(RGB));
 
 		decompressQuadTree(tree, pixels, pixelsSize, 0, 0);
 
-		for (int row = 0; row < pixelsSize; ++row) {
-			for (int column = 0; column < pixelsSize; ++column) {
+		for (uint row = 0; row < pixelsSize; ++row) {
+			for (uint column = 0; column < pixelsSize; ++column) {
 				fwrite(&pixels[row][column].red, sizeof(char), 1, outputFileStream);
 				fwrite(&pixels[row][column].green, sizeof(char), 1, outputFileStream);
 				fwrite(&pixels[row][column].blue, sizeof(char), 1, outputFileStream);

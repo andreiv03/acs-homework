@@ -3,16 +3,20 @@
 
 #include <stdio.h>
 
+typedef unsigned char uchar;
+typedef unsigned int uint;
+typedef unsigned long long ull;
+
 typedef struct RGB {
-	unsigned char red;
-	unsigned char green;
-	unsigned char blue;
+	uchar red;
+	uchar green;
+	uchar blue;
 } RGB;
 
-RGB **readPixelsMatrix(FILE *inputFileStream, int pixelsSize);
-void freePixelsMatrix(RGB **pixels, int pixelsSize);
+RGB** readPixelsMatrix(FILE* inputFileStream, uint pixelsSize);
+void freePixelsMatrix(RGB** pixels, uint pixelsSize);
 
-unsigned long long calculateAverageColor(RGB **pixels, int pixelsSize, int x, int y, char *color);
-double calculateSimilarityScore(RGB **pixels, int pixelsSize, int x, int y);
+ull calculateAverageColor(RGB** pixels, uint pixelsSize, uint x, uint y, char* color);
+ull calculateSimilarityScore(RGB** pixels, uint pixelsSize, uint x, uint y, RGB* pixel);
 
 #endif
