@@ -1,6 +1,5 @@
 #include "../include/utils.h"
 #include "../include/quadtree.h"
-#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -53,9 +52,9 @@ ull calculateSimilarityScore(RGB** pixels, uint pixelsSize, uint x, uint y, RGB*
 
 	for (uint row = x; row < x + pixelsSize; ++row) {
 		for (uint column = y; column < y + pixelsSize; ++column) {
-			score = score + pow(averageRed - pixels[row][column].red, 2);
-			score = score + pow(averageGreen - pixels[row][column].green, 2);
-			score = score + pow(averageBlue - pixels[row][column].blue, 2);
+			score = score + (averageRed - pixels[row][column].red) * (averageRed - pixels[row][column].red);
+			score = score + (averageGreen - pixels[row][column].green) * (averageGreen - pixels[row][column].green);
+			score = score + (averageBlue - pixels[row][column].blue) * (averageBlue - pixels[row][column].blue);
 		}
 	}
 

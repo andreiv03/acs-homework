@@ -5,7 +5,7 @@ HEADERS := include/quadtree.h include/queue.h include/utils.h
 all: build
 
 build: main.c ${FILES} ${HEADERS}
-	gcc ${CFLAGS} -o quadtree main.c ${FILES} ${HEADERS} -lm
+	gcc ${CFLAGS} -o quadtree main.c ${FILES} ${HEADERS}
 
 pack:
 	zip -9 -FSr tema2.zip main.c ${FILES} ${HEADERS} Makefile README
