@@ -19,7 +19,6 @@ function [Link] = get_link_matrix(Labyrinth)
 					in = i + di(d); % neigh i
 					jn = j + dj(d); % neigh j
 
-					% check if neighbor is within bounds
 					if in >= 1 && in <= m && jn >= 1 && jn <= n
 						neigh = (in - 1) * n + jn;
 						Link(node, neigh) = 1 / bits_0;
