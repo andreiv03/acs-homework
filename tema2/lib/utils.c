@@ -26,35 +26,33 @@ void freePixelsMatrix(RGB** pixels, uint pixelsSize) {
 	free(pixels);
 }
 
-ull calculateAverageColor(RGB** pixels, uint pixelsSize, uint x, uint y, char* color) {
-	ull averageColor = 0;
+ull calculateSimilarityScore(RGB** pixels, uint pixelsSize, uint x, uint y, RGB* pixel) {
+	ull averageRed = 0;
+	ull averageGreen = 0;
+	ull averageBlue = 0;
 
 	for (uint row = x; row < x + pixelsSize; ++row) {
 		for (uint column = y; column < y + pixelsSize; ++column) {
-			if (strcmp(color, "red") == 0)
-				averageColor = averageColor + pixels[row][column].red;
-			if (strcmp(color, "green") == 0)
-				averageColor = averageColor + pixels[row][column].green;
-			if (strcmp(color, "blue") == 0)
-				averageColor = averageColor + pixels[row][column].blue;
+			averageRed = averageRed + pixels[row][column].red;
+			averageGreen = averageGreen + pixels[row][column].green;
+			averageBlue = averageBlue + pixels[row][column].blue;
 		}
 	}
 
-	averageColor = averageColor / (pixelsSize * pixelsSize);
-	return averageColor;
-}
+	averageRed = averageRed / (pixelsSize * pixelsSize);
+	averageGreen = averageGreen / (pixelsSize * pixelsSize);
+	averageBlue = averageBlue / (pixelsSize * pixelsSize);
 
-ull calculateSimilarityScore(RGB** pixels, uint pixelsSize, uint x, uint y, RGB* pixel) {
-	ull averageRed = calculateAverageColor(pixels, pixelsSize, x, y, "red");
-	ull averageGreen = calculateAverageColor(pixels, pixelsSize, x, y, "green");
-	ull averageBlue = calculateAverageColor(pixels, pixelsSize, x, y, "blue");
 	ull score = 0;
 
 	for (uint row = x; row < x + pixelsSize; ++row) {
 		for (uint column = y; column < y + pixelsSize; ++column) {
-			score = score + (averageRed - pixels[row][column].red) * (averageRed - pixels[row][column].red);
-			score = score + (averageGreen - pixels[row][column].green) * (averageGreen - pixels[row][column].green);
-			score = score + (averageBlue - pixels[row][column].blue) * (averageBlue - pixels[row][column].blue);
+			score = score + (averageRed - pixels[row][column].red) *
+													(averageRed - pixels[row][column].red);
+			score = score + (averageGreen - pixels[row][column].green) *
+													(averageGreen - pixels[row][column].green);
+			score = score + (averageBlue - pixels[row][column].blue) *
+													(averageBlue - pixels[row][column].blue);
 		}
 	}
 

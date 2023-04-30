@@ -16,7 +16,6 @@ typedef struct RGB {
 RGB** readPixelsMatrix(FILE* inputFileStream, uint pixelsSize);
 void freePixelsMatrix(RGB** pixels, uint pixelsSize);
 
-ull calculateAverageColor(RGB** pixels, uint pixelsSize, uint x, uint y, char* color);
 ull calculateSimilarityScore(RGB** pixels, uint pixelsSize, uint x, uint y, RGB* pixel);
 
 #endif
