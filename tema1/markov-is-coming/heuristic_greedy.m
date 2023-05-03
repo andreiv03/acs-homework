@@ -1,5 +1,5 @@
 function [path] = heuristic_greedy(start_position, probabilities, Adj)
-	size = size(Adj)(1) - 2;
+	size = size(Adj, 1) - 2;
 
 	probabilities(size + 1) = 1;
 	probabilities(size + 2) = 0;

@@ -2,8 +2,7 @@ function [Theta] = normal_equation(FeatureMatrix, Y, tol, iter)
   A = FeatureMatrix' * FeatureMatrix;
   b = FeatureMatrix' * Y;
   
-  m = rows(A);
-  n = columns(A);
+  [m, n] = size(A);
   Theta = zeros(n, 1);
 
   if ~all(eig(A) > 0) || m ~= n
