@@ -1,0 +1,8 @@
+- task1.m: Determin matricele Uk, Sk si Vk cu ajutorul carora calculez matricea Ak.
+- task2.m: Aplic pasii algoritmului descris in cerinta.
+- task3.m: Aplic pasii algoritmului descris in cerinta.
+- visualise_image.m: Pregatesc matricea im pentru a vizualiza imaginea.
+- prepare_data.m: Importez datele din fisierul mnist.mat si selectez liniile de care am nevoie.
+- magic_with_pca.m: Aplic pasii algoritmului descris in cerinta.
+- KNN.m: Aplic pasii algoritmului descris in cerinta.
+- classifyImage.m: Apelez functiile magic_with_pca si KNN pentru a determina predictia ceruta.
