@@ -4,10 +4,8 @@
 #include "./graph.h"
 #include <stdio.h>
 
-int reconstructPath(FILE* outputFileStream, Graph* graph,
-										int* previousVertices, int finishIndex);
-void applyDijkstraAlgorithm(Graph* graph, int startIndex, int* distances,
-														int* previousVertices);
+int reconstructPath(FILE* outputFileStream, Graph* graph, int* previousVertices, int finishIndex);
+void applyDijkstraAlgorithm(Graph* graph, int startIndex, int* distances, int* previousVertices);
 void solveTaskTwo(FILE* outputFileStream, Graph* graph, int treasureWeight);
 
 #endif

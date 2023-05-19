@@ -26,8 +26,7 @@ void heapifyUpPriorityQueue(PriorityQueue* priorityQueue, int index) {
 	PriorityQueueNode parentNode = priorityQueue->nodes[parentIndex];
 
 	if (index > 0 && currentNode.priority < parentNode.priority) {
-		swapPriorityQueueNodes(&priorityQueue->nodes[index],
-													 &priorityQueue->nodes[parentIndex]);
+		swapPriorityQueueNodes(&priorityQueue->nodes[index], &priorityQueue->nodes[parentIndex]);
 		heapifyUpPriorityQueue(priorityQueue, parentIndex);
 	}
 }
@@ -50,14 +49,12 @@ void heapifyDownPriorityQueue(PriorityQueue* priorityQueue, int index) {
 			smallestNodeIndex = rightChildIndex;
 
 	if (smallestNodeIndex != index) {
-		swapPriorityQueueNodes(&priorityQueue->nodes[index],
-													 &priorityQueue->nodes[smallestNodeIndex]);
+		swapPriorityQueueNodes(&priorityQueue->nodes[index], &priorityQueue->nodes[smallestNodeIndex]);
 		heapifyDownPriorityQueue(priorityQueue, smallestNodeIndex);
 	}
 }
 
-void pushToPriorityQueue(PriorityQueue* priorityQueue, int vertex,
-												 int priority) {
+void pushToPriorityQueue(PriorityQueue* priorityQueue, int vertex, int priority) {
 	if (priorityQueue->size == priorityQueue->capacity)
 		return;
 

@@ -19,8 +19,7 @@ int isPriorityQueueEmpty(PriorityQueue* priorityQueue);
 void swapPriorityQueueNodes(PriorityQueueNode* a, PriorityQueueNode* b);
 void heapifyUpPriorityQueue(PriorityQueue* priorityQueue, int index);
 void heapifyDownPriorityQueue(PriorityQueue* priorityQueue, int index);
-void pushToPriorityQueue(PriorityQueue* priorityQueue, int vertex,
-												 int priority);
+void pushToPriorityQueue(PriorityQueue* priorityQueue, int vertex, int priority);
 int popFromPriorityQueue(PriorityQueue* priorityQueue);
 void freePriorityQueue(PriorityQueue* priorityQueue);
 

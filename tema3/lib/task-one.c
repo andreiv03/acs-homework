@@ -11,8 +11,7 @@ void dfs(Graph* graph, int index, int* visited, Graph* connectedGraph) {
 
 	connectedGraph->vertices = connectedGraph->vertices + 1;
 	int connectedGraphSize = connectedGraph->vertices * sizeof(AdjacencyList*);
-	connectedGraph->adjacencyLists = realloc(connectedGraph->adjacencyLists,
-																					 connectedGraphSize);
+	connectedGraph->adjacencyLists = realloc(connectedGraph->adjacencyLists, connectedGraphSize);
 	connectedGraph->adjacencyLists[connectedGraph->vertices - 1] = adjacencyList;
 
 	while (currentVertex != NULL) {
@@ -75,9 +74,11 @@ int applyKruskalAlgorithm(Graph* graph) {
 			minimumSpanningTree[minimumSpanningTreeLength] = edges[index];
 			minimumSpanningTreeLength = minimumSpanningTreeLength + 1;
 
+			int oldParent = parent[destinationIndex];
+			int newParent = parent[sourceIndex];
 			for (int index = 0; index < graph->vertices; ++index)
-				if (parent[index] == parent[destinationIndex])
-					parent[index] = parent[sourceIndex];
+				if (parent[index] == oldParent)
+					parent[index] = newParent;
 		}
 	}
 

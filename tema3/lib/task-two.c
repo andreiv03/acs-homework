@@ -4,8 +4,7 @@
 
 #define INFINITY 0x3f3f3f3f
 
-int reconstructPath(FILE* outputFileStream, Graph* graph,
-										int* previousVertices, int finishIndex) {
+int reconstructPath(FILE* outputFileStream, Graph* graph, int* parents, int finishIndex) {
 	int path[256];
 	int pathLength = 0;
 	int minimumDepth = INFINITY;
@@ -18,7 +17,7 @@ int reconstructPath(FILE* outputFileStream, Graph* graph,
 
 		path[pathLength] = currentIndex;
 		pathLength = pathLength + 1;
-		currentIndex = previousVertices[currentIndex];
+		currentIndex = parents[currentIndex];
 	}
 
 	for (int index = pathLength - 1; index >= 0; --index) {
@@ -30,13 +29,17 @@ int reconstructPath(FILE* outputFileStream, Graph* graph,
 	return minimumDepth;
 }
 
-void applyDijkstraAlgorithm(Graph* graph, int startIndex, int* distances,
-														int* previousVertices) {
+void applyDijkstraAlgorithm(Graph* graph, int startIndex, int* distances, int* parents) {
 	int visited[graph->vertices];
-	for (int index = 0; index < graph->vertices; ++index)
+	float scores[graph->vertices];
+
+	for (int index = 0; index < graph->vertices; ++index) {
 		visited[index] = 0;
+		scores[index] = INFINITY;
+	}
 
 	distances[startIndex] = 0;
+	scores[startIndex] = 0.0;
 
 	PriorityQueue* priorityQueue = createPriorityQueue(graph->vertices);
 	pushToPriorityQueue(priorityQueue, startIndex, distances[startIndex]);
@@ -46,13 +49,14 @@ void applyDijkstraAlgorithm(Graph* graph, int startIndex, int* distances,
 		Vertex* vertex = graph->adjacencyLists[currentIndex]->head;
 		visited[currentIndex] = 1;
 
-		vertex = vertex->next;
 		while (vertex != NULL) {
 			int index = getVertexIndex(graph, vertex->destination);
+			float score = 1.0 * vertex->cost / graph->adjacencyLists[index]->head->depth;
 
-			if (distances[currentIndex] + vertex->cost < distances[index]) {
+			if (scores[currentIndex] + score < scores[index]) {
+				scores[index] = scores[currentIndex] + score;
 				distances[index] = distances[currentIndex] + vertex->cost;
-				previousVertices[index] = currentIndex;
+				parents[index] = currentIndex;
 
 				if (visited[index] == 0) {
 					pushToPriorityQueue(priorityQueue, index, distances[index]);
@@ -68,30 +72,35 @@ void applyDijkstraAlgorithm(Graph* graph, int startIndex, int* distances,
 }
 
 void solveTaskTwo(FILE* outputFileStream, Graph* graph, int treasureWeight) {
-	int distances[graph->vertices];
-	for (int index = 0; index < graph->vertices; ++index)
-		distances[index] = INFINITY;
+	int distancesFromIsland[graph->vertices];
+	int distancesFromShip[graph->vertices];
+	int parentsFromIsland[graph->vertices];
+	int parentsFromShip[graph->vertices];
 
-	int previousVertices[graph->vertices];
-	for (int index = 0; index < graph->vertices; ++index)
-		previousVertices[index] = -1;
+	for (int index = 0; index < graph->vertices; ++index) {
+		distancesFromIsland[index] = INFINITY;
+		distancesFromShip[index] = INFINITY;
+		parentsFromIsland[index] = -1;
+		parentsFromShip[index] = -1;
+	}
 
 	int islandIndex = getVertexIndex(graph, "Insula");
 	int shipIndex = getVertexIndex(graph, "Corabie");
 
-	applyDijkstraAlgorithm(graph, islandIndex, distances, previousVertices);
+	applyDijkstraAlgorithm(graph, islandIndex, distancesFromIsland, parentsFromIsland);
+	if (distancesFromIsland[shipIndex] == INFINITY) {
+		fprintf(outputFileStream, "Echipajul nu poate transporta comoara inapoi la corabie\n");
+		return;
+	}
 
-	if (distances[shipIndex] == INFINITY) {
+	applyDijkstraAlgorithm(graph, shipIndex, distancesFromShip, parentsFromShip);
+	if (distancesFromShip[islandIndex] == INFINITY) {
 		fprintf(outputFileStream, "Echipajul nu poate ajunge la insula\n");
 		return;
 	}
 
-	int minimumDepth = reconstructPath(outputFileStream, graph,
-																		 previousVertices, shipIndex);
-
-	fprintf(outputFileStream, "%d\n", distances[shipIndex]);
+	int minimumDepth = reconstructPath(outputFileStream, graph, parentsFromIsland, shipIndex);
+	fprintf(outputFileStream, "%d\n", distancesFromIsland[shipIndex]);
 	fprintf(outputFileStream, "%d\n", minimumDepth);
-	int totalRoutes = treasureWeight / minimumDepth;
-	totalRoutes = totalRoutes + (treasureWeight % minimumDepth != 0);
-	fprintf(outputFileStream, "%d\n", totalRoutes);
+	fprintf(outputFileStream, "%d\n", treasureWeight / minimumDepth);
 }
