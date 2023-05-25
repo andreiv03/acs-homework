@@ -1,5 +1,5 @@
 build:
-	gcc -o maze_game -g main.c -lncurses
+	gcc -o maze_game -g main.c screen_functions.c -lncurses
 run:
 	./maze_game
 clean:
