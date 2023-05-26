@@ -49,8 +49,8 @@ void readInput(Maze* maze) {
 		maze->cells[rows] = calloc(maze->width, sizeof(MazeCell));
 
 		for (int columns = 0; columns < maze->width; ++columns) {
-			int cell = 0;
-			fscanf(inputFileStream, "%d", &cell);
+			unsigned int cell = 0;
+			fscanf(inputFileStream, "%u", &cell);
 
 			if (cell == 0 || cell == 1)
 				maze->cells[rows][columns].data = cell;
@@ -73,19 +73,19 @@ void readInput(Maze* maze) {
 }
 
 void updatePlayerCoordinates(Maze* maze, char* choice) {
-	if (*choice == 'w')
+	if (*choice == 'w' || *choice == 'W')
 		if (maze->cells[maze->player->x - 1][maze->player->y].data == 0)
 			maze->player->x = maze->player->x - 1;
 
-	if (*choice == 'a')
+	if (*choice == 'a' || *choice == 'A')
 		if (maze->cells[maze->player->x][maze->player->y - 1].data == 0)
 			maze->player->y = maze->player->y - 1;
 
-	if (*choice == 's')
+	if (*choice == 's' || *choice == 'S')
 		if (maze->cells[maze->player->x + 1][maze->player->y].data == 0)
 			maze->player->x = maze->player->x + 1;
 
-	if (*choice == 'd')
+	if (*choice == 'd' || *choice == 'D')
 		if (maze->cells[maze->player->x][maze->player->y + 1].data == 0)
 			maze->player->y = maze->player->y + 1;
 }

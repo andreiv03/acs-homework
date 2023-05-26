@@ -9,7 +9,7 @@ typedef struct Coordinates {
 } Coordinates;
 
 typedef struct MazeCell {
-	int data;
+	unsigned int data : 1;
 } MazeCell;
 
 typedef struct Maze {
