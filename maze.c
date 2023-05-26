@@ -4,6 +4,20 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define PLAYER_SYMBOL "P"
+#define FINISH_SYMBOL "F"
+#define EMPTY_SYMBOL " "
+#define WALL_SYMBOL "#"
+
+#define LOWER_W_KEY 'w'
+#define UPPER_W_KEY 'W'
+#define LOWER_A_KEY 'a'
+#define UPPER_A_KEY 'A'
+#define LOWER_S_KEY 's'
+#define UPPER_S_KEY 'S'
+#define LOWER_D_KEY 'd'
+#define UPPER_D_KEY 'D'
+
 Maze* createMaze() {
 	Maze* maze = calloc(1, sizeof(Maze));
 	if (maze == NULL)
@@ -73,21 +87,24 @@ void readInput(Maze* maze) {
 }
 
 void updatePlayerCoordinates(Maze* maze, char* choice) {
-	if (*choice == 'w' || *choice == 'W')
-		if (maze->cells[maze->player->x - 1][maze->player->y].data == 0)
-			maze->player->x = maze->player->x - 1;
+	int x = maze->player->x;
+	int y = maze->player->y;
 
-	if (*choice == 'a' || *choice == 'A')
-		if (maze->cells[maze->player->x][maze->player->y - 1].data == 0)
-			maze->player->y = maze->player->y - 1;
+	if (*choice == LOWER_W_KEY || *choice == UPPER_W_KEY)
+		if (maze->cells[x - 1][y].data == 0)
+			maze->player->x = x - 1;
 
-	if (*choice == 's' || *choice == 'S')
-		if (maze->cells[maze->player->x + 1][maze->player->y].data == 0)
-			maze->player->x = maze->player->x + 1;
+	if (*choice == LOWER_A_KEY || *choice == UPPER_A_KEY)
+		if (maze->cells[x][y - 1].data == 0)
+			maze->player->y = y - 1;
 
-	if (*choice == 'd' || *choice == 'D')
-		if (maze->cells[maze->player->x][maze->player->y + 1].data == 0)
-			maze->player->y = maze->player->y + 1;
+	if (*choice == LOWER_S_KEY || *choice == UPPER_S_KEY)
+		if (maze->cells[x + 1][y].data == 0)
+			maze->player->x = x + 1;
+
+	if (*choice == LOWER_D_KEY || *choice == UPPER_D_KEY)
+		if (maze->cells[x][y + 1].data == 0)
+			maze->player->y = y + 1;
 }
 
 void startGame(Maze* maze, char* choice) {
@@ -109,17 +126,17 @@ void startGame(Maze* maze, char* choice) {
 	for (int rows = 0; rows < maze->height; ++rows) {
 		for (int columns = 0; columns < maze->width; ++columns) {
 			if (rows == maze->player->x && columns == maze->player->y)
-				printw("P");
+				printw(PLAYER_SYMBOL);
 
 			else if (rows == maze->finish->x && columns == maze->finish->y)
-				printw("F");
+				printw(FINISH_SYMBOL);
 
 			else {
 				if (maze->cells[rows][columns].data == 0)
-					printw(" ");
+					printw(EMPTY_SYMBOL);
 
 				else if (maze->cells[rows][columns].data == 1)
-					printw("#");
+					printw(WALL_SYMBOL);
 			}
 		}
 
