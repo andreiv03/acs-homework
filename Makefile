@@ -1,8 +1,11 @@
-build:
-	gcc -o maze_game -g main.c screen_functions.c -lncurses
-run:
-	./maze_game
+build: *.c *.h
+	gcc -Wall -g -o maze -g *.c *.h -lncurses
+
+run: build
+	./maze
+
 clean:
-	rm maze_game
+	rm -f maze
+
 mem-check:
-	valgrind --leak-check=full --track-origins=yes maze_game
+	valgrind --leak-check=full --track-origins=yes ./maze
