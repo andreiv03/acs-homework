@@ -4,10 +4,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define PLAYER_SYMBOL "P"
-#define FINISH_SYMBOL "F"
-#define EMPTY_SYMBOL " "
-#define WALL_SYMBOL "#"
+#define PLAYER_SYMBOL " P "
+#define FINISH_SYMBOL " F "
+#define EMPTY_SYMBOL "   "
+#define WALL_SYMBOL "###"
 
 #define LOWER_W_KEY 'w'
 #define UPPER_W_KEY 'W'
