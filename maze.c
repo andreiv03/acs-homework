@@ -3,10 +3,33 @@
 #include <ncurses.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
+
+Maze* createMaze() {
+	Maze* maze = calloc(1, sizeof(Maze));
+	if (maze == NULL)
+		exit(1);
+
+	maze->player = calloc(1, sizeof(Coordinates));
+	if (maze->player == NULL)
+		exit(1);
+
+	maze->finish = calloc(1, sizeof(Coordinates));
+	if (maze->finish == NULL)
+		exit(1);
+
+	return maze;
+}
+
+void freeMaze(Maze* maze) {
+	for (int rows = 0; rows < maze->height; ++rows)
+		free(maze->cells[rows]);
+	free(maze->player);
+	free(maze->finish);
+	free(maze);
+}
 
 void readInput(Maze* maze) {
-	FILE* inputFileStream;
+	FILE* inputFileStream = NULL;
 
 	if (maze->difficulty == 1)
 		inputFileStream = fopen("./input/easy.in", "r");
@@ -67,17 +90,7 @@ void updatePlayerCoordinates(Maze* maze, char* choice) {
 			maze->player->y = maze->player->y + 1;
 }
 
-void finishGame(Maze* maze) {
-	erase();
-
-	printw("================ MAZE GAME ================\n\n");
-	printw("Congratulations! You finished the maze!\n");
-	printw("Press 'q' to quit the game.\n");
-
-	refresh();
-}
-
-void startGame(Maze* maze, Menu* menu, char* choice) {
+void startGame(Maze* maze, char* choice) {
 	erase();
 
 	printw("================ MAZE GAME ================\n\n");
@@ -85,10 +98,10 @@ void startGame(Maze* maze, Menu* menu, char* choice) {
 	printw("Press 'q' to quit the game.\n\n");
 
 	if (maze->difficulty == 1)
-		printw("Difficulty : Easy\n");
+		printw("Difficulty : Easy\n\n");
 
 	if (maze->difficulty == 2)
-		printw("Difficulty : Medium\n");
+		printw("Difficulty : Medium\n\n");
 
 	if (maze->difficulty == 3)
 		printw("Difficulty : Hard\n\n");
@@ -113,8 +126,30 @@ void startGame(Maze* maze, Menu* menu, char* choice) {
 		printw("\n");
 	}
 
-	refresh();
 	*choice = getch();
-
 	updatePlayerCoordinates(maze, choice);
+
+	refresh();
+}
+
+void winGame(Maze* maze, char* choice) {
+	erase();
+
+	printw("================ MAZE GAME ================\n\n");
+	printw("Congratulations! You finished the maze!\n");
+	printw("Press any key to quit the game.\n");
+
+	*choice = getch();
+	refresh();
+}
+
+void loseGame(Maze* maze, char* choice) {
+	erase();
+
+	printw("================ MAZE GAME ================\n\n");
+	printw("You lost! Better luck next time!\n");
+	printw("Press any key to quit the game.\n");
+
+	*choice = getch();
+	refresh();
 }

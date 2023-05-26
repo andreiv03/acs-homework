@@ -2,7 +2,6 @@
 #define _MAZE_H_
 
 #include "./menu.h"
-#include <stdio.h>
 
 typedef struct Coordinates {
 	int x;
@@ -22,8 +21,11 @@ typedef struct Maze {
 	MazeCell** cells;
 } Maze;
 
+Maze* createMaze();
+void freeMaze(Maze* maze);
 void readInput(Maze* maze);
-void startGame(Maze* maze, Menu* menu, char* choice);
-void finishGame(Maze* maze);
+void startGame(Maze* maze, char* choice);
+void winGame(Maze* maze, char* choice);
+void loseGame(Maze* maze, char* choice);
 
 #endif

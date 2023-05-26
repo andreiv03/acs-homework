@@ -1,6 +1,20 @@
 #include "./menu.h"
 #include "./maze.h"
 #include <ncurses.h>
+#include <stdlib.h>
+
+Menu* createMenu() {
+	Menu* menu = calloc(1, sizeof(Menu));
+	if (menu == NULL)
+		exit(1);
+
+	menu->difficulty = 1;
+	return menu;
+}
+
+void freeMenu(Menu* menu) {
+	free(menu);
+}
 
 void printMenu(Menu* menu, char* choice) {
 	erase();
@@ -27,12 +41,14 @@ void printMenu(Menu* menu, char* choice) {
 	printw("Press '2' to CHANGE DIFFICULTY\n");
 	printw("Press '3' to EXIT GAME\n");
 
-	refresh();
 	*choice = getch();
 
-	if (*choice == '2')
+	if (*choice == '2') {
 		menu->difficulty++;
 
-	if (menu->difficulty == 4)
-		menu->difficulty = 1;
+		if (menu->difficulty == 4)
+			menu->difficulty = 1;
+	}
+
+	refresh();
 }
