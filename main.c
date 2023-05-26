@@ -1,5 +1,5 @@
-#include "./maze.h"
-#include "./menu.h"
+#include "./include/maze.h"
+#include "./include/menu.h"
 #include <ncurses.h>
 
 int main() {

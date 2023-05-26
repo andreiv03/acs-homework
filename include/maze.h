@@ -1,8 +1,6 @@
 #ifndef _MAZE_H_
 #define _MAZE_H_
 
-#include "./menu.h"
-
 typedef struct Coordinates {
 	int x;
 	int y;

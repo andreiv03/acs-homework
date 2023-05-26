@@ -1,5 +1,5 @@
-#include "./menu.h"
-#include "./maze.h"
+#include "./include/menu.h"
+#include "./include/maze.h"
 #include <ncurses.h>
 #include <stdlib.h>
 
