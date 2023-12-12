@@ -31,7 +31,6 @@ void enqueue_task(os_threadpool_t *tp, os_task_t *t) {
 
   pthread_mutex_lock(&tp->mutex);
   list_add_tail(&tp->head, &t->list);
-  tp->num_tasks++;
   pthread_mutex_unlock(&tp->mutex);
   pthread_cond_broadcast(&tp->cond);
 }
@@ -45,24 +44,19 @@ os_task_t *dequeue_task(os_threadpool_t *tp) {
 
   pthread_mutex_lock(&tp->mutex);
 
-  while (queue_is_empty(tp) && !tp->shutdown) {
-    tp->waiting_threads++;
+  while (queue_is_empty(tp) && !tp->finished)
     pthread_cond_wait(&tp->cond, &tp->mutex);
-    pthread_mutex_lock(&tp->mutex);
-    tp->waiting_threads--;
-  }
 
-  if (tp->shutdown) {
+  if (tp->finished) {
     pthread_mutex_unlock(&tp->mutex);
     return NULL;
   }
 
-  if (!queue_is_empty(tp)) {
-    os_list_node_t *node = tp->head.next;
-    list_del(node);
-    t = list_entry(node, os_task_t, list);
-    tp->num_tasks--;
-  }
+  os_list_node_t *node = tp->head.next;
+  list_del(node);
+  t = list_entry(node, os_task_t, list);
+
+  tp->running_threads++;
 
   pthread_mutex_unlock(&tp->mutex);
 
@@ -81,11 +75,11 @@ static void *thread_loop_function(void *arg) {
 
     t->action(t->argument);
     destroy_task(t);
-  }
 
-  if (tp->waiting_threads == tp->num_threads - 1) {
-    tp->shutdown = 1;
+    pthread_mutex_lock(&tp->mutex);
+    tp->running_threads = tp->running_threads - 1;
     pthread_cond_broadcast(&tp->cond);
+    pthread_mutex_unlock(&tp->mutex);
   }
 
   return NULL;
@@ -94,13 +88,20 @@ static void *thread_loop_function(void *arg) {
 void wait_for_completion(os_threadpool_t *tp) {
   pthread_mutex_lock(&tp->mutex);
 
-  while (tp->num_tasks > 0 || tp->waiting_threads < tp->num_threads - 1)
+  while (1) {
+    if (queue_is_empty(tp) && tp->running_threads == 0)
+      break;
+
     pthread_cond_wait(&tp->cond, &tp->mutex);
+  }
+
+  tp->finished = 1;
 
   pthread_mutex_unlock(&tp->mutex);
+  pthread_cond_broadcast(&tp->cond);
 
-//  for (unsigned int i = 0; i < tp->num_threads; i++)
-//    pthread_join(tp->threads[i], NULL);
+  for (unsigned int i = 0; i < tp->num_threads; i++)
+    pthread_join(tp->threads[i], NULL);
 }
 
 os_threadpool_t *create_threadpool(unsigned int num_threads) {
@@ -115,14 +116,12 @@ os_threadpool_t *create_threadpool(unsigned int num_threads) {
   pthread_mutex_init(&tp->mutex, NULL);
   pthread_cond_init(&tp->cond, NULL);
 
+  tp->finished = 0;
+  tp->running_threads = 0;
+
   tp->num_threads = num_threads;
   tp->threads = malloc(num_threads * sizeof(*tp->threads));
   DIE(tp->threads == NULL, "malloc");
-
-  tp->num_tasks = 0;
-  tp->shutdown = 0;
-  tp->waiting_threads = 0;
-
   for (unsigned int i = 0; i < num_threads; ++i) {
     rc = pthread_create(&tp->threads[i], NULL, &thread_loop_function, (void *) tp);
     DIE(rc < 0, "pthread_create");
@@ -132,25 +131,16 @@ os_threadpool_t *create_threadpool(unsigned int num_threads) {
 }
 
 void destroy_threadpool(os_threadpool_t *tp) {
-//  os_list_node_t *n, *p;
-
-  pthread_mutex_lock(&tp->mutex);
-  tp->shutdown = 1;
-  pthread_cond_broadcast(&tp->cond);
-  pthread_mutex_unlock(&tp->mutex);
-
-  for (unsigned int i = 0; i < tp->num_threads; i++) {
-    pthread_join(tp->threads[i], NULL);
-  }
+  os_list_node_t *n, *p;
 
   pthread_mutex_destroy(&tp->mutex);
   pthread_cond_destroy(&tp->cond);
 
+  list_for_each_safe(n, p, &tp->head) {
+    list_del(n);
+    destroy_task(list_entry(n, os_task_t, list));
+  }
+
   free(tp->threads);
   free(tp);
-
-//  list_for_each_safe(n, p, &tp->head) {
-//    list_del(n);
-//    destroy_task(list_entry(n, os_task_t, list));
-//  }
 }

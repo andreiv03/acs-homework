@@ -22,9 +22,8 @@ typedef struct os_threadpool {
   pthread_mutex_t mutex;
   pthread_cond_t cond;
 
-  size_t num_tasks;
-  size_t shutdown;
-  size_t waiting_threads;
+  unsigned int finished;
+  unsigned int running_threads;
 } os_threadpool_t;
 
 os_task_t *create_task(void (*f)(void *), void *arg, void (*destroy_arg)(void *));
