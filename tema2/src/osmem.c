@@ -13,7 +13,7 @@
 #define MMAP_THRESHOLD_CALLOC (128 * 32)
 #define SBRK_FAILED ((void *) -1)
 
-struct block_meta *heap_start = NULL;
+struct block_meta *heap_start;
 size_t MMAP_THRESHOLD = MMAP_THRESHOLD_MALLOC;
 char is_first_brk_call = 1;
 
@@ -45,61 +45,52 @@ void os_push_block(struct block_meta *block) {
 
 	struct block_meta *aux = heap_start;
 
-	while (aux->next != NULL) {
+	while (aux->next != NULL)
 		aux = aux->next;
-	}
 
 	aux->next = block;
 	block->prev = aux;
 }
 
 void os_remove_block(struct block_meta *block) {
-	if (heap_start == block) {
+	if (heap_start == block)
 		heap_start = block->next;
-	}
 
-	if (block->prev != NULL) {
+	if (block->prev != NULL)
 		block->prev->next = block->next;
-	}
 
-	if (block->next != NULL) {
+	if (block->next != NULL)
 		block->next->prev = block->prev;
-	}
 
 	block->prev = NULL;
 	block->next = NULL;
 }
 
 void os_coalesce_left_block(struct block_meta *block) {
-	if (block->status != STATUS_FREE) {
+	if (block->status != STATUS_FREE)
 		return;
-	}
 
-	if (block->prev == NULL || block->prev->status != STATUS_FREE) {
+	if (block->prev == NULL || block->prev->status != STATUS_FREE)
 		return;
-	}
 
 	block->prev->size = block->prev->size + block->size + BLOCK_META_SIZE;
 	os_remove_block(block);
 }
 
 void os_coalesce_right_block(struct block_meta *block) {
-	if (block->status != STATUS_FREE) {
+	if (block->status != STATUS_FREE)
 		return;
-	}
 
-	if (block->next == NULL || block->next->status != STATUS_FREE) {
+	if (block->next == NULL || block->next->status != STATUS_FREE)
 		return;
-	}
 
 	block->size = block->size + block->next->size + BLOCK_META_SIZE;
 	os_remove_block(block->next);
 }
 
 struct block_meta *os_search_best_block(size_t size) {
-	if (heap_start == NULL) {
+	if (heap_start == NULL)
 		return NULL;
-	}
 
 	struct block_meta *block = NULL;
 	size_t block_size = ~1;
@@ -121,11 +112,11 @@ struct block_meta *os_search_best_block(size_t size) {
 struct block_meta *os_split_block(struct block_meta *block, size_t size) {
 	block->status = STATUS_ALLOC;
 
-	if (block->size - size < BLOCK_META_SIZE + ALIGNMENT) {
+	if (block->size - size < BLOCK_META_SIZE + ALIGNMENT)
 		return block;
-	}
 
 	struct block_meta *new_block = (struct block_meta *) ((char *) block + size + BLOCK_META_SIZE);
+
 	new_block->size = block->size - size - BLOCK_META_SIZE;
 	new_block->status = STATUS_FREE;
 	new_block->prev = block;
@@ -146,15 +137,15 @@ struct block_meta *os_split_block(struct block_meta *block, size_t size) {
 }
 
 void *os_malloc(size_t size) {
-	if (size == 0) {
+	if (size == 0)
 		return NULL;
-	}
 
 	size = ALIGN(size);
-	size_t threshold_size = MMAP_THRESHOLD == MMAP_THRESHOLD_CALLOC ? size + BLOCK_META_SIZE : size;
+	size_t threshold_size = MMAP_THRESHOLD == MMAP_THRESHOLD_MALLOC ? size : size + BLOCK_META_SIZE;
 
 	if (threshold_size < MMAP_THRESHOLD && is_first_brk_call == 1) {
 		struct block_meta *block = os_create_block(MMAP_THRESHOLD_MALLOC - BLOCK_META_SIZE, 0);
+
 		block->status = STATUS_FREE;
 		os_push_block(block);
 		is_first_brk_call = 0;
@@ -162,23 +153,19 @@ void *os_malloc(size_t size) {
 
 	struct block_meta *best_block = os_search_best_block(size);
 
-	if (best_block != NULL && threshold_size < MMAP_THRESHOLD) {
+	if (best_block != NULL && threshold_size < MMAP_THRESHOLD)
 		return os_split_block(best_block, size) + 1;
-	}
 
 	struct block_meta *heap_end = heap_start;
 
-	while (heap_end != NULL && heap_end->next != NULL) {
+	while (heap_end != NULL && heap_end->next != NULL)
 		heap_end = heap_end->next;
-	}
 
-	while (heap_end != NULL && heap_end->status == STATUS_MAPPED) {
+	while (heap_end != NULL && heap_end->status == STATUS_MAPPED)
 		heap_end = heap_end->prev;
-	}
 
-	if (heap_end != NULL && heap_end->status == STATUS_MAPPED) {
+	if (heap_end != NULL && heap_end->status == STATUS_MAPPED)
 		heap_end = NULL;
-	}
 
 	if (heap_end != NULL && heap_end->status == STATUS_FREE && threshold_size < MMAP_THRESHOLD) {
 		void *ptr = sbrk(size - heap_end->size);
@@ -191,14 +178,14 @@ void *os_malloc(size_t size) {
 	}
 
 	struct block_meta *block = os_create_block(size, threshold_size);
+
 	os_push_block(block);
 	return block + 1;
 }
 
 void os_free(void *ptr) {
-	if (ptr == NULL) {
+	if (ptr == NULL)
 		return;
-	}
 
 	struct block_meta *block = (struct block_meta *) ((char *) ptr - BLOCK_META_SIZE);
 
@@ -218,12 +205,13 @@ void *os_calloc(size_t nmemb, size_t size) {
 	size_t total_size = ALIGN(nmemb * size);
 
 	MMAP_THRESHOLD = MMAP_THRESHOLD_CALLOC;
+
 	void *ptr = os_malloc(total_size);
+
 	MMAP_THRESHOLD = MMAP_THRESHOLD_MALLOC;
 
-	if (ptr != NULL) {
+	if (ptr != NULL)
 		memset(ptr, 0, total_size);
-	}
 
 	return ptr;
 }
@@ -231,9 +219,8 @@ void *os_calloc(size_t nmemb, size_t size) {
 void *os_expand_block(struct block_meta *block, size_t size) {
 	struct block_meta *heap_end = heap_start;
 
-	while (heap_end != NULL && heap_end->next != NULL) {
+	while (heap_end != NULL && heap_end->next != NULL)
 		heap_end = heap_end->next;
-	}
 
 	if (heap_end == block) {
 		void *ptr = sbrk(size - block->size);
@@ -245,13 +232,11 @@ void *os_expand_block(struct block_meta *block, size_t size) {
 		return heap_end + 1;
 	}
 
-	if (block->next == NULL || block->next->status != STATUS_FREE) {
+	if (block->next == NULL || block->next->status != STATUS_FREE)
 		return NULL;
-	}
 
-	if (block->size + block->next->size + BLOCK_META_SIZE < size) {
+	if (block->size + block->next->size + BLOCK_META_SIZE < size)
 		return NULL;
-	}
 
 	if (block->size + block->next->size < size) {
 		block->size = block->size + block->next->size + BLOCK_META_SIZE;
@@ -260,9 +245,11 @@ void *os_expand_block(struct block_meta *block, size_t size) {
 	}
 
 	size_t new_block_size = block->size + block->next->size - size;
+
 	os_remove_block(block->next);
 
 	struct block_meta *new_block = (struct block_meta *) ((char *) block + size + BLOCK_META_SIZE);
+
 	new_block->size = new_block_size;
 	new_block->status = STATUS_FREE;
 	new_block->prev = block;
@@ -285,9 +272,8 @@ void *os_expand_block(struct block_meta *block, size_t size) {
 void *os_realloc(void *ptr, size_t size) {
 	size = ALIGN(size);
 
-	if (ptr == NULL) {
+	if (ptr == NULL)
 		return os_malloc(size);
-	}
 
 	if (size == 0) {
 		os_free(ptr);
@@ -296,20 +282,19 @@ void *os_realloc(void *ptr, size_t size) {
 
 	struct block_meta *block = (struct block_meta *) ((char *) ptr - BLOCK_META_SIZE);
 
-	if (block->status == STATUS_FREE) {
+	if (block->status == STATUS_FREE)
 		return NULL;
-	}
 
 	if (block->status == STATUS_MAPPED || size > MMAP_THRESHOLD) {
 		void *new_ptr = os_malloc(size);
+
 		memcpy(new_ptr, ptr, block->size > size ? size : block->size);
 		os_free(ptr);
 		return new_ptr;
 	}
 
-	if (block->size >= size) {
+	if (block->size >= size)
 		return os_split_block(block, size) + 1;
-	}
 
 	void *new_ptr = os_expand_block(block, size);
 
