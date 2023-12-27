@@ -12,10 +12,7 @@
 #include "utils.h"
 
 static bool shell_cd(word_t *dir) {
-	if (dir == NULL || dir->string == NULL)
-		return false;
-
-	if (chdir(dir->string) != 0)
+	if (dir == NULL || dir->string == NULL || chdir(dir->string))
 		return false;
 
 	return true;
@@ -25,77 +22,74 @@ static int shell_exit(void) {
 	exit(SHELL_EXIT);
 }
 
-static char *process_path(const char *string, char *cwd, int store_cwd) {
-	size_t length = 1024;
-	char *path = calloc(length, sizeof(char));
+static void shell_redirect_stdin(simple_command_t *s) {
+	char path[1024];
 
-	if (store_cwd == 0)
-		snprintf(path, length, "%s", string);
+	snprintf(path, sizeof(path), "%s", s->in->string);
 
-	if (store_cwd == 1)
-		snprintf(path, length, "%s/%s", cwd, string);
+	if (s->in->next_part)
+		strcat(path, get_word(s->in->next_part));
 
-	return path;
+	int fd = open(path, O_RDONLY, 0644);
+
+	dup2(fd, STDIN_FILENO);
+	close(fd);
 }
 
-static void shell_redirect(simple_command_t *s, char *cwd, int store_cwd) {
-	int fd;
-	int open_flags;
+static void shell_redirect_stdout(simple_command_t *s) {
+	char path[1024];
 
-	if (s->in != NULL) {
-		char *in_path = process_path(s->in->string, cwd, store_cwd);
+	snprintf(path, sizeof(path), "%s", s->out->string);
 
-		if (s->in->next_part != NULL)
-			strcat(in_path, get_word(s->in->next_part));
+	if (s->out->next_part)
+		strcat(path, get_word(s->out->next_part));
 
-		fd = open(in_path, O_RDONLY);
-		DIE(fd < 0, "open failed");
+	int flags = O_WRONLY | O_CREAT;
 
-		dup2(fd, STDIN_FILENO);
-		close(fd);
+	if (s->err || s->io_flags == IO_OUT_APPEND)
+		flags = flags | O_APPEND;
+	else
+		flags = flags | O_TRUNC;
 
-		free(in_path);
-	}
+	int fd = open(path, flags, 0644);
 
-	if (s->out != NULL) {
-		char *out_path = process_path(s->out->string, cwd, store_cwd);
+	dup2(fd, STDOUT_FILENO);
+	close(fd);
+}
 
-		if (s->out->next_part != NULL)
-			strcat(out_path, get_word(s->out->next_part));
+static void shell_redirect_stderr(simple_command_t *s) {
+	char path[1024];
 
-		if (s->err != NULL || s->io_flags == IO_OUT_APPEND)
-			open_flags = O_WRONLY | O_CREAT | O_APPEND;
-		else
-			open_flags = O_WRONLY | O_CREAT | O_TRUNC;
+	snprintf(path, sizeof(path), "%s", s->err->string);
 
-		fd = open(out_path, open_flags, 0644);
-		DIE(fd < 0, "open failed");
+	if (s->err->next_part)
+		strcat(path, get_word(s->err->next_part));
 
-		dup2(fd, STDOUT_FILENO);
-		close(fd);
+	int flags = O_WRONLY | O_CREAT;
 
-		free(out_path);
-	}
+	if (s->out || s->io_flags == IO_REGULAR)
+		flags = flags | O_TRUNC;
+	else
+		flags = flags | O_APPEND;
 
-	if (s->err != NULL) {
-		char *err_path = process_path(s->err->string, cwd, store_cwd);
+	int fd = open(path, flags, 0644);
 
-		if (s->err->next_part != NULL)
-			strcat(err_path, get_word(s->err->next_part));
+	dup2(fd, STDERR_FILENO);
+	close(fd);
+}
 
-		if (s->out != NULL || s->io_flags == IO_REGULAR)
-			open_flags = O_WRONLY | O_CREAT | O_TRUNC;
-		else
-			open_flags = O_WRONLY | O_CREAT | O_APPEND;
+static void shell_redirect(simple_command_t *s) {
+	int stdin_fd = dup(STDIN_FILENO);
+	int stdout_fd = dup(STDOUT_FILENO);
+	int stderr_fd = dup(STDERR_FILENO);
 
-		fd = open(err_path, open_flags, 0644);
-		DIE(fd < 0, "open failed");
+	s->in ? shell_redirect_stdin(s) : NULL;
+	s->out ? shell_redirect_stdout(s) : NULL;
+	s->err ? shell_redirect_stderr(s) : NULL;
 
-		dup2(fd, STDERR_FILENO);
-		close(fd);
-
-		free(err_path);
-	}
+	dup2(stdin_fd, STDIN_FILENO);
+	dup2(stdout_fd, STDOUT_FILENO);
+	dup2(stderr_fd, STDERR_FILENO);
 }
 
 static int parse_simple(simple_command_t *s, int level, command_t *father) {
@@ -110,57 +104,30 @@ static int parse_simple(simple_command_t *s, int level, command_t *father) {
 	if (strcmp(s->verb->string, "exit") == 0 || strcmp(s->verb->string, "quit") == 0)
 		return shell_exit();
 
-	if (strcmp(s->verb->string, "cd") == 0) {
-		int stdin_fd = dup(STDIN_FILENO);
-		int stdout_fd = dup(STDOUT_FILENO);
-		int stderr_fd = dup(STDERR_FILENO);
+	if (strcmp(s->verb->string, "cd") == 0)
+		return shell_redirect(s), shell_cd(s->params);
 
-		shell_redirect(s, cwd, 1);
-
-		dup2(stdin_fd, STDIN_FILENO);
-		close(stdin_fd);
-
-		dup2(stdout_fd, STDOUT_FILENO);
-		close(stdout_fd);
-
-		dup2(stderr_fd, STDERR_FILENO);
-		close(stderr_fd);
-
-		return shell_cd(s->params);
-	}
-
-	if (s->verb->next_part != NULL) {
-		char *value = get_word(s->verb->next_part->next_part);
-
-		setenv(s->verb->string, value, 1);
-		free(value);
-
-		return true;
-	}
+	if (s->verb->next_part)
+		return setenv(s->verb->string, get_word(s->verb->next_part->next_part), 1), true;
 
 	pid_t pid = fork();
+	int status;
 
 	if (pid < 0)
 		return shell_exit();
 
-	if (pid > 0) {
-		int status;
-
-		waitpid(pid, &status, 0);
-		return status ? 0 : 1;
-	}
+	if (pid > 0)
+		return waitpid(pid, &status, 0), !status;
 
 	int argc;
 	char **argv = get_argv(s, &argc);
 
-	shell_redirect(s, cwd, 0);
+	s->in ? shell_redirect_stdin(s) : NULL;
+	s->out ? shell_redirect_stdout(s) : NULL;
+	s->err ? shell_redirect_stderr(s) : NULL;
 
 	execvp(argv[0], argv);
 	printf("Execution failed for '%s'\n", get_word(s->verb));
-
-	for (int index = 0; index <= argc; ++index)
-		free(argv[index]);
-	free(argv);
 
 	return shell_exit();
 }
@@ -176,7 +143,8 @@ static bool run_in_parallel(command_t *cmd1, command_t *cmd2, int level, command
 	if (pid_cmd2 == 0)
 		exit(parse_command(cmd2, level + 1, father));
 
-	int status_cmd1, status_cmd2;
+	int status_cmd1;
+	int status_cmd2;
 
 	waitpid(pid_cmd1, &status_cmd1, 0);
 	waitpid(pid_cmd2, &status_cmd2, 0);
@@ -214,7 +182,8 @@ static bool run_on_pipe(command_t *cmd1, command_t *cmd2, int level, command_t *
 	close(fd[0]);
 	close(fd[1]);
 
-	int status_cmd1, status_cmd2;
+	int status_cmd1;
+	int status_cmd2;
 
 	waitpid(pid_cmd1, &status_cmd1, 0);
 	waitpid(pid_cmd2, &status_cmd2, 0);
@@ -256,7 +225,7 @@ int parse_command(command_t *c, int level, command_t *father) {
 			break;
 
 		default:
-			return SHELL_EXIT;
+			return shell_exit();
 	}
 
 	return exit_status;
