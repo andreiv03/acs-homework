@@ -141,7 +141,7 @@ public class IMDB {
 							performance.setTitle(production.getTitle());
 							performance.setType(production.getType());
 							actor.getPerformances().add(performance);
-							break;
+							return;
 						}
 					}
 				}
@@ -150,7 +150,7 @@ public class IMDB {
 					for (User user : this.getUsers()) {
 						if (user.getUsername().equals(rating.getUsername())) {
 							user.getReviewedProductions().add(production.getTitle());
-							break;
+							return;
 						}
 					}
 				}
@@ -164,7 +164,7 @@ public class IMDB {
 						for (Actor actor : this.getActors()) {
 							if (actor.getName().equals(actorName)) {
 								actor.setResponsible(user.getUsername());
-								break;
+								return;
 							}
 						}
 					}
@@ -176,7 +176,7 @@ public class IMDB {
 							if (production.getTitle().equals(productionTitle)) {
 								production.setResponsible(user.getUsername());
 								production.registerObserver((Observer) user);
-								break;
+								return;
 							}
 						}
 					}
@@ -425,14 +425,14 @@ public class IMDB {
 					if (!Genre.contains(userInputFour)) {
 						System.out.println("Invalid genre!");
 						System.out.println();
-						break;
+						return;
 					}
 
 					productions = productions.stream().filter(
 							production -> production.getGenres().contains(Genre.valueOf(userInputFour))).collect(
 							Collectors.toCollection(ArrayList::new));
 
-					break;
+					return;
 				}
 
 				case 2: {
@@ -444,14 +444,14 @@ public class IMDB {
 					if (userInputFour < 1) {
 						System.out.println("Invalid number of ratings!");
 						System.out.println();
-						break;
+						return;
 					}
 
 					productions = productions.stream().filter(
 							production -> production.getRatings().size() >= userInputFour).collect(
 							Collectors.toCollection(ArrayList::new));
 
-					break;
+					return;
 				}
 			}
 		}
@@ -531,37 +531,36 @@ public class IMDB {
 				for (Actor actor : this.getActors()) {
 					if (actor.getName().equals(userInputTwo)) {
 						actor.displayInfo();
-						break;
+						return;
 					}
 				}
 
 				System.out.println("Actor not found!");
 				System.out.println();
-				break;
+				return;
 
 			case 2:
 				for (Production production : this.getProductions()) {
 					if (production.getType().equals("Movie") && production.getTitle().equals(userInputTwo)) {
 						production.displayInfo();
-						break;
+						return;
 					}
 				}
 
 				System.out.println("Movie not found!");
 				System.out.println();
-				break;
+				return;
 
 			case 3:
 				for (Production production : this.getProductions()) {
 					if (production.getType().equals("Series") && production.getTitle().equals(userInputTwo)) {
 						production.displayInfo();
-						break;
+						return;
 					}
 				}
 
 				System.out.println("Series not found!");
 				System.out.println();
-				break;
 		}
 	}
 
@@ -569,8 +568,12 @@ public class IMDB {
 		Scanner scanner = new Scanner(System.in);
 
 		System.out.println("Favorites:");
-		System.out.println("\tActors: " + currentUser.getFavoriteActors());
-		System.out.println("\tProductions: " + currentUser.getFavoriteProductions());
+		System.out.println(
+				"\tActors: " + (currentUser.getFavoriteActors() != null ? currentUser.getFavoriteActors() : "[]"));
+		System.out.println(
+				"\tProductions: " + (currentUser.getFavoriteProductions() != null ? currentUser.getFavoriteProductions() :
+						"[]"));
+		System.out.println();
 
 		System.out.println("What do you want to do?");
 		System.out.println("\t1) Add");
@@ -608,38 +611,40 @@ public class IMDB {
 					if (actor.getName().equals(userInputThree)) {
 						if (userInputOne == 1) {
 							currentUser.addActorToFavorites(actor);
-							System.out.println();
-							break;
+							return;
 						}
 
 						currentUser.removeActorFromFavorites(actor);
-						System.out.println();
-						break;
+						return;
 					}
 				}
 
 				System.out.println("Actor not found!");
 				System.out.println();
-				break;
+				return;
 
 			case 2:
+				if (currentUser.getFavoriteProductions() != null && currentUser.getFavoriteProductions().contains(
+						userInputThree)) {
+					System.out.println("Production already in favorites!");
+					System.out.println();
+					return;
+				}
+
 				for (Production production : this.getProductions()) {
 					if (production.getTitle().equals(userInputThree)) {
 						if (userInputOne == 1) {
 							currentUser.addProductionToFavorites(production);
-							System.out.println();
-							break;
+							return;
 						}
 
 						currentUser.removeProductionFromFavorites(production);
-						System.out.println();
-						break;
+						return;
 					}
 				}
 
 				System.out.println("Production not found!");
 				System.out.println();
-				break;
 		}
 	}
 
@@ -674,7 +679,7 @@ public class IMDB {
 				System.out.println();
 
 				if (userInputTwo < 1 || userInputTwo > 4)
-					break;
+					return;
 
 				System.out.print("Enter the reason: ");
 				String userInputThree = scanner.nextLine();
@@ -699,7 +704,7 @@ public class IMDB {
 						newRequest.setType(RequestType.DELETE_ACCOUNT);
 						newRequest.setTo("ADMIN");
 						((Regular) currentUser).createRequest(newRequest);
-						break;
+						return;
 
 					case 2:
 						newRequest.setType(RequestType.ACTOR_ISSUE);
@@ -710,13 +715,13 @@ public class IMDB {
 						if (actor == null) {
 							System.out.println("Actor not found!");
 							System.out.println();
-							break;
+							return;
 						}
 
 						if (actor.getResponsible().equals(currentUser.getUsername())) {
 							System.out.println("You are already responsible for this actor!");
 							System.out.println();
-							break;
+							return;
 						}
 
 						newRequest.setActorName(userInputFour);
@@ -727,7 +732,7 @@ public class IMDB {
 								responsibleUser -> responsibleUser.getNotifications().add(
 										"Someone just made a request that you are responsible for!"));
 
-						break;
+						return;
 
 					case 3:
 						newRequest.setType(RequestType.MOVIE_ISSUE);
@@ -738,13 +743,13 @@ public class IMDB {
 						if (production == null) {
 							System.out.println("Production not found!");
 							System.out.println();
-							break;
+							return;
 						}
 
 						if (production.getResponsible().equals(currentUser.getUsername())) {
 							System.out.println("You are already responsible for this production!");
 							System.out.println();
-							break;
+							return;
 						}
 
 						newRequest.setMovieTitle(userInputFour);
@@ -755,18 +760,18 @@ public class IMDB {
 								responsibleUser -> responsibleUser.getNotifications().add(
 										"Someone just made a request that you are responsible for!"));
 
-						break;
+						return;
 
 					case 4:
 						newRequest.setType(RequestType.OTHERS);
 						newRequest.setTo("ADMIN");
 						((Regular) currentUser).createRequest(newRequest);
-						break;
+						return;
 				}
 
 				newRequest.registerObserver((Observer) currentUser);
 				this.getRequests().add(newRequest);
-				break;
+				return;
 			}
 
 			case 2: {
@@ -777,7 +782,7 @@ public class IMDB {
 				if (userRequests.isEmpty()) {
 					System.out.println("You have no requests!");
 					System.out.println();
-					break;
+					return;
 				}
 
 				System.out.println("Requests: " + userRequests);
@@ -792,14 +797,13 @@ public class IMDB {
 				if (request == null) {
 					System.out.println("Request not found!");
 					System.out.println();
-					break;
+					return;
 				}
 
 				this.getRequests().remove(request);
 				if (request.getTo().equals("ADMIN"))
 					((Regular) currentUser).removeRequest(request);
 
-				break;
 			}
 		}
 	}
@@ -874,7 +878,7 @@ public class IMDB {
 					newActor.setResponsible(currentUser.getUsername());
 					((Staff) currentUser).addActorSystem(newActor);
 					currentUser.updateExperience(new ActorAdditionStrategy());
-					break;
+					return;
 				}
 
 				Actor actor = this.getActors().stream().filter(a -> a.getName().equals(userInputThree)).findFirst().orElse(
@@ -883,23 +887,23 @@ public class IMDB {
 				if (actor == null) {
 					System.out.println("Actor not found!");
 					System.out.println();
-					break;
+					return;
 				}
 
 				if (!actor.getResponsible().equals("ADMIN") && !actor.getResponsible().equals(currentUser.getUsername())) {
 					System.out.println("You are not responsible for this actor!");
 					System.out.println();
-					break;
+					return;
 				}
 
 				if (actor.getResponsible().equals("ADMIN") && !currentUser.getUserType().equals(AccountType.Admin)) {
 					System.out.println("You are not an admin!");
 					System.out.println();
-					break;
+					return;
 				}
 
 				((Staff) currentUser).removeActorSystem(userInputThree);
-				break;
+				return;
 			}
 
 			case 2: {
@@ -910,7 +914,7 @@ public class IMDB {
 					newMovie.registerObserver((Observer) currentUser);
 					((Staff) currentUser).addProductionSystem(newMovie);
 					currentUser.updateExperience(new ProductionAdditionStrategy());
-					break;
+					return;
 				}
 
 				Production production = this.getProductions().stream().filter(
@@ -919,23 +923,23 @@ public class IMDB {
 				if (production == null) {
 					System.out.println("Movie not found!");
 					System.out.println();
-					break;
+					return;
 				}
 
 				if (!production.getResponsible().equals(currentUser.getUsername())) {
 					System.out.println("You are not responsible for this movie!");
 					System.out.println();
-					break;
+					return;
 				}
 
 				if (production.getResponsible().equals("ADMIN") && !currentUser.getUserType().equals(AccountType.Admin)) {
 					System.out.println("You are not an admin!");
 					System.out.println();
-					break;
+					return;
 				}
 
 				((Staff) currentUser).removeProductionSystem(userInputThree);
-				break;
+				return;
 			}
 
 			case 3: {
@@ -946,7 +950,7 @@ public class IMDB {
 					newSeries.registerObserver((Observer) currentUser);
 					((Staff) currentUser).addProductionSystem(newSeries);
 					currentUser.updateExperience(new ProductionAdditionStrategy());
-					break;
+					return;
 				}
 
 				Production production = this.getProductions().stream().filter(
@@ -955,23 +959,22 @@ public class IMDB {
 				if (production == null) {
 					System.out.println("Series not found!");
 					System.out.println();
-					break;
+					return;
 				}
 
 				if (!production.getResponsible().equals(currentUser.getUsername())) {
 					System.out.println("You are not responsible for this series!");
 					System.out.println();
-					break;
+					return;
 				}
 
 				if (production.getResponsible().equals("ADMIN") && !currentUser.getUserType().equals(AccountType.Admin)) {
 					System.out.println("You are not an admin!");
 					System.out.println();
-					break;
+					return;
 				}
 
 				((Staff) currentUser).removeProductionSystem(userInputThree);
-				break;
 			}
 		}
 	}
@@ -1003,7 +1006,7 @@ public class IMDB {
 
 		switch (userInputOne) {
 			case 1:
-				break;
+				return;
 
 			case 2: {
 				System.out.print("Enter the id: ");
@@ -1019,7 +1022,7 @@ public class IMDB {
 				if (request == null) {
 					System.out.println("Request not found!");
 					System.out.println();
-					break;
+					return;
 				}
 
 				System.out.println("What do you want to do?");
@@ -1033,7 +1036,7 @@ public class IMDB {
 				System.out.println();
 
 				if (userInputThree < 1 || userInputThree > 2)
-					break;
+					return;
 
 				if (userInputThree == 1) {
 					request.setStatus(RequestStatus.APPROVED);
@@ -1055,7 +1058,6 @@ public class IMDB {
 				if (request.getTo().equals("ADMIN"))
 					RequestsHolder.removeRequest(request);
 
-				break;
 			}
 		}
 	}
@@ -1088,14 +1090,14 @@ public class IMDB {
 				for (Actor actor : this.getActors()) {
 					if (actor.getName().equals(userInputTwo)) {
 						updatedActor = actor;
-						break;
+						return;
 					}
 				}
 
 				if (updatedActor == null) {
 					System.out.println("Actor not found!");
 					System.out.println();
-					break;
+					return;
 				}
 
 				System.out.println("What do you want to update?");
@@ -1109,7 +1111,7 @@ public class IMDB {
 				System.out.println();
 
 				if (userInputThree < 1 || userInputThree > 2)
-					break;
+					return;
 
 				switch (userInputThree) {
 					case 1:
@@ -1117,18 +1119,18 @@ public class IMDB {
 						String userInputFour = scanner.nextLine();
 						System.out.println();
 						updatedActor.setName(userInputFour);
-						break;
+						return;
 
 					case 2:
 						System.out.print("Enter the new description: ");
 						String userInputFive = scanner.nextLine();
 						System.out.println();
 						updatedActor.setBiography(userInputFive);
-						break;
+						return;
 				}
 
 				((Staff) currentUser).updateActorSystem(updatedActor);
-				break;
+				return;
 			}
 
 			case 2: {
@@ -1137,14 +1139,14 @@ public class IMDB {
 				for (Production production : this.getProductions()) {
 					if (production.getType().equals("Movie") && production.getTitle().equals(userInputTwo)) {
 						updatedMovie = (Movie) production;
-						break;
+						return;
 					}
 				}
 
 				if (updatedMovie == null) {
 					System.out.println("Movie not found!");
 					System.out.println();
-					break;
+					return;
 				}
 
 				System.out.println("What do you want to update?");
@@ -1158,7 +1160,7 @@ public class IMDB {
 				System.out.println();
 
 				if (userInputThree < 1 || userInputThree > 2)
-					break;
+					return;
 
 				switch (userInputThree) {
 					case 1:
@@ -1166,18 +1168,18 @@ public class IMDB {
 						String userInputFour = scanner.nextLine();
 						System.out.println();
 						updatedMovie.setTitle(userInputFour);
-						break;
+						return;
 
 					case 2:
 						System.out.print("Enter the new plot: ");
 						String userInputNine = scanner.nextLine();
 						System.out.println();
 						updatedMovie.setPlot(userInputNine);
-						break;
+						return;
 				}
 
 				((Staff) currentUser).updateProductionSystem(updatedMovie);
-				break;
+				return;
 			}
 
 			case 3:
@@ -1186,14 +1188,14 @@ public class IMDB {
 				for (Production production : this.getProductions()) {
 					if (production.getType().equals("Series") && production.getTitle().equals(userInputTwo)) {
 						updatedSeries = (Series) production;
-						break;
+						return;
 					}
 				}
 
 				if (updatedSeries == null) {
 					System.out.println("Series not found!");
 					System.out.println();
-					break;
+					return;
 				}
 
 				System.out.println("What do you want to update?");
@@ -1207,7 +1209,7 @@ public class IMDB {
 				System.out.println();
 
 				if (userInputThree < 1 || userInputThree > 2)
-					break;
+					return;
 
 				switch (userInputThree) {
 					case 1:
@@ -1215,18 +1217,17 @@ public class IMDB {
 						String userInputFour = scanner.nextLine();
 						System.out.println();
 						updatedSeries.setTitle(userInputFour);
-						break;
+						return;
 
 					case 2:
 						System.out.print("Enter the new plot: ");
 						String userInputNine = scanner.nextLine();
 						System.out.println();
 						updatedSeries.setPlot(userInputNine);
-						break;
+						return;
 				}
 
 				((Staff) currentUser).updateProductionSystem(updatedSeries);
-				break;
 		}
 	}
 
@@ -1265,13 +1266,13 @@ public class IMDB {
 				if (this.getProductions().stream().noneMatch(production -> production.getTitle().equals(userInputTwo))) {
 					System.out.println("Production not found!");
 					System.out.println();
-					break;
+					return;
 				}
 
 				if (ratings.stream().anyMatch(rating -> rating.getProductionTitle().equals(userInputTwo))) {
 					System.out.println("You have already reviewed this production!");
 					System.out.println();
-					break;
+					return;
 				}
 
 				System.out.print("Enter the rating: ");
@@ -1282,7 +1283,7 @@ public class IMDB {
 				if (userInputThree < 1 || userInputThree > 10) {
 					System.out.println("Invalid rating!");
 					System.out.println();
-					break;
+					return;
 				}
 
 				System.out.print("Enter the review: ");
@@ -1307,20 +1308,19 @@ public class IMDB {
 					}
 				}
 
-				break;
+				return;
 
 			case 2:
 				if (ratings.stream().noneMatch(rating -> rating.getProductionTitle().equals(userInputTwo))) {
 					System.out.println("You have not reviewed this production!");
 					System.out.println();
-					break;
+					return;
 				}
 
 				for (Production production : this.getProductions())
 					if (production.getTitle().equals(userInputTwo))
 						production.getRatings().removeIf(rating -> rating.getUsername().equals(currentUser.getUsername()));
 
-				break;
 		}
 	}
 
@@ -1381,13 +1381,13 @@ public class IMDB {
 				System.out.println("\temail: " + email);
 				System.out.println("\tpassword: " + password);
 
-				break;
+				return;
 
 			case 2:
 				if (userInputTwo.equals(currentUser.getUsername())) {
 					System.out.println("You cannot delete yourself!");
 					System.out.println();
-					break;
+					return;
 				}
 
 				User user =
@@ -1396,7 +1396,7 @@ public class IMDB {
 				if (user == null) {
 					System.out.println("User not found!");
 					System.out.println();
-					break;
+					return;
 				}
 
 				if (user.getUserType() == AccountType.Regular)
@@ -1416,7 +1416,7 @@ public class IMDB {
 				if (user.getUserType() == AccountType.Admin) {
 					System.out.println("You cannot delete an admin!");
 					System.out.println();
-					break;
+					return;
 				}
 
 				this.getRequests().removeIf(request -> request.getUsername().equals(user.getUsername()));
@@ -1428,7 +1428,6 @@ public class IMDB {
 					request.removeObserver((Observer) user);
 
 				this.getUsers().remove(user);
-				break;
 		}
 	}
 
