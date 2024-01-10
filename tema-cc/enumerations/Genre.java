@@ -20,6 +20,7 @@ public enum Genre {
 		for (Genre genre : Genre.values())
 			if (genre.name().equals(value))
 				return true;
+
 		return false;
 	}
 }
