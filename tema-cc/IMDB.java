@@ -44,6 +44,11 @@ public class IMDB {
 		return imdb;
 	}
 
+	public static void main(String[] args) {
+		IMDB imdb = IMDB.getInstance();
+		imdb.run();
+	}
+
 	public static <T> ArrayList<T> readArrayOfObjectsFromJSON(String path, TypeReference<ArrayList<T>> typeReference) {
 		ObjectMapper objectMapper = new ObjectMapper();
 		objectMapper.findAndRegisterModules();
