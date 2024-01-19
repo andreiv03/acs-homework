@@ -5,13 +5,17 @@ import org.example.exceptions.StudentAlreadyExists;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Set;
+import java.util.TreeSet;
 
 import static org.example.Main.readFromFile;
 import static org.example.Main.writeToFile;
 
 public class Secretariat {
+	private final Comparator<Course<?>> coursesComparator = Comparator.comparing(Course::getName);
+	private final Set<Course<?>> courses = new TreeSet<>(coursesComparator);
 	private final ArrayList<Student> students = new ArrayList<>();
-	private final ArrayList<Course<?>> courses = new ArrayList<>();
 
 	public void addStudent(String studiesProgram, String studentName) throws StudentAlreadyExists {
 		for (Student student : students)
@@ -134,6 +138,16 @@ public class Secretariat {
 				}
 
 				student.removePreference();
+			}
+
+			if (student.getCourse() == null) {
+				for (Course<?> course : courses) {
+					if (course.getCapacity() > course.getStudents().size()) {
+						student.setCourse(course);
+						course.addStudent(student);
+						break;
+					}
+				}
 			}
 		}
 	}
