@@ -82,13 +82,12 @@
   (let* ((branch (get-ch-branch st (car pattern))))
     (if (equal? branch #f)
       (list #f '())
-      (let* ((label (get-branch-label branch)))
-        (if (< (length label) (length pattern))
-          (list label (drop pattern (length label)) (get-branch-subtree branch))
-          (let* ((lcp (longest-common-prefix label pattern)))
-            (if (equal? (car lcp) pattern)
-              #t
-              (list #f (car lcp)))))))))
+      (let* ((label (get-branch-label branch)) (lcp (longest-common-prefix pattern label)))
+        (if (equal? (car lcp) pattern)
+          #t
+          (if (equal? (car lcp) label)
+            (list label (drop pattern (length label)) (get-branch-subtree branch))
+            (list #f (car lcp))))))))
 
 
 ; TODO 5
