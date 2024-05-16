@@ -1,0 +1,4 @@
+Aceasta aplicatie reprezinta un router simplu care primeste si proceseaza pachete de retea folosind protocolul IP. Aplicatia este scrisa in C si foloseste diverse functii si structuri pentru a realiza functionalitatea de baza a unui router.
+Aplicatia implementeaza o functie de potrivire a celui mai lung prefix pentru a determina interfața de iesire a pachetului IP. Se foloseste o cautare binara eficienta pentru a gasi cea mai buna potrivire in tabela de rutare.
+Pachetele IP sunt verificate pentru a asigura integritatea si sunt procesate in functie de tipul lor, TTL si adresa destinatie. Pachetele sunt retransmise sau respinse conform regulilor de rutare.
+Functia search_best_route_table_entry realizeaza dirijarea folosind cel mai lung prefix potrivit, utilizand o cautare binara eficienta in tabela de rutare.
