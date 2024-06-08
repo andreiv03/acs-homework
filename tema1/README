@@ -1,0 +1,2 @@
+La decodificarea mesajelor, mut pe rand literele la inceputul mesajului. Folosesc "#" pentru a retine pozitia unde trebuie sa mut literele, iar "?" pentru a ma deplasa pe banda.
+La identificarea cuvintelor cheie, folosesc starile "P", "PL", "PLE" si "S", "SO" ca sa imi dau seama cand le gasesc.
